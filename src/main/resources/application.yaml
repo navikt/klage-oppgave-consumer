@@ -1,0 +1,48 @@
+spring:
+  main:
+    banner-mode: OFF
+  codec:
+    max-in-memory-size: 10MB
+  sleuth:
+    baggage:
+      remote-fields:
+        - Nav-Callid
+        - Nav-Consumer-Id
+      correlation-fields:
+        - Nav-Callid
+        - Nav-Consumer-Id
+
+server:
+  port: 7088
+  error:
+    whitelabel:
+      enabled: false
+
+management:
+  endpoint:
+    health:
+      show-details: always
+  endpoints.web:
+    exposure:
+      include: info, health, metrics, prometheus
+    base-path: "/internal"
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+KAFKA_BOOTSTRAP_SERVERS: localhost:9092
+KAFKA_GROUP_ID: klage-oppgave-consumer
+KAFKA_TOPIC: aapen-oppgave-endret-v1-preprod
+
+SERVICE_USER_USERNAME: srvklage-saksbeh
+SERVICE_USER_PASSWORD: itest
+
+navCallId: Nav-Callid
+navConsumerId: Nav-Consumer-Id
+
+SLACK_URL: http://localhost
+SLACK_CHANNEL_ID: 2
+NAIS_CLUSTER_NAME: rst
