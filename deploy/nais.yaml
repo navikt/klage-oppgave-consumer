@@ -38,12 +38,6 @@ spec:
   secureLogs:
     enabled: true
   webproxy: true
-  accessPolicy:
-    outbound:
-      external:
-      {{#each externalHosts as |host|}}
-        - host: {{host}}
-      {{/each}}
   envFrom:
     - secret: srvklage-saksbeh
   env:
