@@ -42,6 +42,11 @@ dependencies {
     implementation("org.springframework.kafka:spring-kafka")
 
     implementation("no.nav.slackposter:simple-slack-poster:5")
+
+    testImplementation("org.springframework.boot:spring-boot-starter-test") {
+        exclude(group = "org.junit.vintage")
+        exclude(group = "org.mockito")
+    }
 }
 
 idea {

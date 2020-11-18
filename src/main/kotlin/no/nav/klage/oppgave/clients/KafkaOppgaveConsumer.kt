@@ -26,6 +26,7 @@ class KafkaOppgaveConsumer(private val slackClient: SlackClient) {
             oppgaveRecord.value().logIt()
 
             //TODO: parse and store hjemmel
+            // hjemmelParsingService.extractHjemml(oppgave.beskrivelse)
         }.onFailure {
 //            slackClient.postMessage("Nylig mottatt oppgave feilet! (${causeClass(rootCause(it))})", Severity.ERROR)
             secureLogger.error("Failed to process oppgave", it)
