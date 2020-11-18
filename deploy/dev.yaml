@@ -1,2 +1,2 @@
-externalHosts:
+externalHosts: []
 springProfile: dev-gcp
