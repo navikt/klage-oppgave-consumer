@@ -2,6 +2,8 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 val logstashVersion = "6.4"
 val springSleuthVersion = "2.2.6.RELEASE"
+val mockkVersion = "1.9.3"
+val springMockkVersion = "2.0.3"
 
 val githubUser: String by project
 val githubPassword: String by project
@@ -42,6 +44,9 @@ dependencies {
     implementation("org.springframework.kafka:spring-kafka")
 
     implementation("no.nav.slackposter:simple-slack-poster:5")
+
+    testImplementation("io.mockk:mockk:$mockkVersion")
+    testImplementation("com.ninja-squad:springmockk:$springMockkVersion")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test") {
         exclude(group = "org.junit.vintage")

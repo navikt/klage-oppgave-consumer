@@ -33,23 +33,26 @@ class KafkaOppgaveConsumer(
             oppgave.logIt()
 
             logger.debug("Attempting to extract hjemler from beskrivelse")
-            val foundHjemler = hjemmelParsingService.extractHjemmel(oppgave.beskrivelse)
 
-            if (foundHjemler.isNotEmpty()) {
-                logger.debug("Found hjemler: {}. Picking first if many.", foundHjemler)
-
-                if (shouldStoreHjemmelInOppgave(oppgave.metadata[HJEMMEL], foundHjemler.first())) {
-                    logger.debug("Storing new hjemmel in oppgave")
-//                    oppgaveRepository.storeHjemmelInMetadata(oppgave.id, foundHjemler.first())
-                } else {
-                    logger.debug("No need to store hjemmel")
-                }
-
+            if (oppgave.beskrivelse.isNullOrBlank()) {
+                logger.debug("Beskrivelse was empty or null")
             } else {
-                logger.debug("No hjemler found in beskrivelse. See more in secure log.")
-                secureLogger.debug("No hjemler found in beskrivelse: {}", oppgave.beskrivelse)
-            }
+                val foundHjemler = hjemmelParsingService.extractHjemmel(oppgave.beskrivelse)
 
+                if (foundHjemler.isNotEmpty()) {
+                    logger.debug("Found hjemler: {}. Picking first if many.", foundHjemler)
+
+                    if (shouldStoreHjemmelInOppgave(oppgave.metadata[HJEMMEL], foundHjemler.first())) {
+                        logger.debug("Storing new hjemmel in oppgave")
+                        oppgaveRepository.storeHjemmelInMetadata(oppgave.id, foundHjemler.first())
+                    } else {
+                        logger.debug("No need to store hjemmel")
+                    }
+                } else {
+                    logger.debug("No hjemler found in beskrivelse. See more in secure log.")
+                    secureLogger.debug("No hjemler found in beskrivelse: {}", oppgave.beskrivelse)
+                }
+            }
         }.onFailure {
 //            slackClient.postMessage("Nylig mottatt oppgave feilet! (${causeClass(rootCause(it))})", Severity.ERROR)
             secureLogger.error("Failed to process oppgave", it)
