@@ -1,13 +1,12 @@
-package no.nav.klage.oppgave.repositories
+package no.nav.klage.oppgave.service
 
 import no.nav.klage.oppgave.clients.FETCH_LIMIT
 import no.nav.klage.oppgave.clients.OppgaveClient
 import no.nav.klage.oppgave.domain.Oppgave
-import no.nav.klage.oppgave.service.HjemmelParsingService
-import org.springframework.stereotype.Component
+import org.springframework.stereotype.Service
 
-@Component
-class OppgaveRepository(
+@Service
+class OppgaveService(
         private val oppgaveClient: OppgaveClient,
         private val hjemmelParsingService: HjemmelParsingService
 ) {
