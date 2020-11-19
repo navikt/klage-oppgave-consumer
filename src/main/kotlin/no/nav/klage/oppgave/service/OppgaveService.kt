@@ -13,13 +13,17 @@ class OppgaveService(
     fun bulkUpdateHjemmel() {
         var offset = 0
 
-        val oppgaveResponse = oppgaveClient.fetchHjemmel(offset)
+        var oppgaveResponse = oppgaveClient.fetchHjemmel(offset)
 
-        val oppgaverWithNewHjemmel = setHjemmel(oppgaveResponse.oppgaver)
+        while (oppgaveResponse.antallTreffTotalt > 0) {
+            val oppgaverWithNewHjemmel = setHjemmel(oppgaveResponse.oppgaver)
 
-        oppgaverWithNewHjemmel.forEach { oppgaveClient.putOppgave(it) }
+            oppgaverWithNewHjemmel.forEach { oppgaveClient.putOppgave(it) }
 
-        offset += FETCH_LIMIT
+            offset += FETCH_LIMIT
+
+            oppgaveResponse = oppgaveClient.fetchHjemmel(offset)
+        }
     }
 
     private fun setHjemmel(oppgaver: List<Oppgave>): List<Oppgave> =
