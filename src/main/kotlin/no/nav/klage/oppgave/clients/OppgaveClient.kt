@@ -2,7 +2,7 @@ package no.nav.klage.oppgave.clients
 
 import brave.Tracer
 import no.nav.klage.oppgave.domain.Oppgave
-import no.nav.klage.oppgave.service.HjemmelParsingService
+import no.nav.klage.oppgave.domain.OppgaveResponse
 import no.nav.klage.oppgave.utils.getLogger
 import no.nav.klage.oppgave.utils.getSecureLogger
 import org.springframework.beans.factory.annotation.Value
@@ -13,11 +13,12 @@ import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import org.springframework.web.reactive.function.client.bodyToMono
 
+const val FETCH_LIMIT = 10
+
 @Component
 class OppgaveClient(
         private val oppgaveWebClient: WebClient,
         private val tracer: Tracer,
-        private val hjemmelParsingService: HjemmelParsingService,
         @Value("\${spring.application.name}") private val applicationName: String
 ) {
 
@@ -26,16 +27,12 @@ class OppgaveClient(
         private val logger = getLogger(javaClass.enclosingClass)
         private val securelogger = getSecureLogger()
 
-        const val STATUSKATEGORI_AAPEN = "AAPEN"
         const val HJEMMEL = "HJEMMEL"
     }
 
     @Retryable
-    fun hjemmelMagic() {
-        val limit = 10
-        var offset = 0
-
-        val oppgaveResponse = logTimingAndWebClientResponseException("getOppgaver ($offset)") {
+    fun fetchHjemmel(offset: Int, limit: Int = FETCH_LIMIT) =
+            logTimingAndWebClientResponseException("getOppgaver ($offset)") {
             oppgaveWebClient.get()
                     .uri { uriBuilder ->
                         uriBuilder.queryParam("limit", limit)
@@ -49,15 +46,8 @@ class OppgaveClient(
                     .block() ?: throw RuntimeException("Oppgaver could not be fetched")
         }
 
-        val oppgaverWithNewHjemmel = setHjemmel(oppgaveResponse.oppgaver)
-
-        oppgaverWithNewHjemmel.forEach { putOppgave(it) }
-
-        offset += limit
-    }
-
     @Retryable
-    fun putOppgave(oppgave: Oppgave) {
+    fun putOppgave(oppgave: Oppgave) =
         logTimingAndWebClientResponseException("putOppgave") {
             oppgaveWebClient.put()
                     .uri { uriBuilder ->
@@ -70,21 +60,6 @@ class OppgaveClient(
                     .retrieve()
                     .bodyToMono<Oppgave>()
                     .block() ?: throw java.lang.RuntimeException("Oppgave could not be put")
-        }
-    }
-
-    private fun setHjemmel(oppgaver: List<Oppgave>): List<Oppgave> =
-        oppgaver.mapNotNull {
-            val possibleHjemmel = hjemmelParsingService.extractHjemmel(it.beskrivelse ?: "")
-            if (possibleHjemmel.isEmpty()) {
-                null
-            } else {
-                it.copy(
-                        metadata = HashMap(it.metadata).apply {
-                            put(HJEMMEL, possibleHjemmel[0])
-                        }
-                )
-            }
         }
 
 
@@ -112,8 +87,3 @@ class OppgaveClient(
     }
 
 }
-
-data class OppgaveResponse(
-        val antallTreffTotalt: Int,
-        val oppgaver: List<Oppgave>
-)

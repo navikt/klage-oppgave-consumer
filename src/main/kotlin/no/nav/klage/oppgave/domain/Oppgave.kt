@@ -120,3 +120,8 @@ enum class Prioritet {
 enum class Status {
     OPPRETTET, AAPNET, UNDER_BEHANDLING, FERDIGSTILT, FEILREGISTRERT
 }
+
+data class OppgaveResponse(
+        val antallTreffTotalt: Int,
+        val oppgaver: List<Oppgave>
+)
