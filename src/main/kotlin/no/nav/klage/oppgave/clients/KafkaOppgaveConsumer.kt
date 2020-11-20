@@ -13,14 +13,17 @@ import org.springframework.stereotype.Component
 
 @Component
 class KafkaOppgaveConsumer(
-        private val slackClient: SlackClient,
-        private val hjemmelParsingService: HjemmelParsingService,
-        private val oppgaveRepository: OppgaveRepository) {
+    private val slackClient: SlackClient,
+    private val hjemmelParsingService: HjemmelParsingService,
+    private val oppgaveRepository: OppgaveRepository
+) {
 
     companion object {
         @Suppress("JAVA_CLASS_ON_COMPANION")
         private val logger = getLogger(javaClass.enclosingClass)
         private val secureLogger = getSecureLogger()
+
+        const val MANGLER_HJEMMEL = "MANGLER"
     }
 
     @KafkaListener(topics = ["\${KAFKA_TOPIC}"])
@@ -35,7 +38,8 @@ class KafkaOppgaveConsumer(
             logger.debug("Attempting to extract hjemler from beskrivelse")
 
             if (oppgave.beskrivelse.isNullOrBlank()) {
-                logger.debug("Beskrivelse was empty or null")
+                logger.debug("Beskrivelse was empty or null. Setting HJEMMEL to {}", MANGLER_HJEMMEL)
+                oppgaveRepository.storeHjemmelInMetadata(oppgave.id, MANGLER_HJEMMEL)
             } else {
                 val foundHjemler = hjemmelParsingService.extractHjemmel(oppgave.beskrivelse)
 
@@ -50,7 +54,12 @@ class KafkaOppgaveConsumer(
                     }
                 } else {
                     logger.debug("No hjemler found in beskrivelse. See more in secure log.")
-                    secureLogger.debug("No hjemler found in beskrivelse: {}", oppgave.beskrivelse)
+                    secureLogger.debug(
+                        "No hjemler found in beskrivelse. Setting HJEMMEL to {}. Beskrivelse: {}",
+                        MANGLER_HJEMMEL,
+                        oppgave.beskrivelse
+                    )
+                    oppgaveRepository.storeHjemmelInMetadata(oppgave.id, MANGLER_HJEMMEL)
                 }
             }
         }.onFailure {
@@ -71,7 +80,11 @@ class KafkaOppgaveConsumer(
                 false
             }
             else -> {
-                logger.debug("Parsed hjemmel {} was different from previously stored hjemmel {}", parsedHjemmel, hjemmelInOppgave)
+                logger.debug(
+                    "Parsed hjemmel {} was different from previously stored hjemmel {}",
+                    parsedHjemmel,
+                    hjemmelInOppgave
+                )
                 true
             }
         }

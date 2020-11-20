@@ -76,7 +76,7 @@ internal class KafkaOppgaveConsumerTest {
     }
 
     @Test
-    fun `don't store anything if beskrivelse is empty`() {
+    fun `store MANGLER if beskrivelse is empty`() {
         val oppgaveRepositoryMock = mockk<OppgaveRepository>(relaxed = true)
 
         val hjemmelParsingServiceMock = mockk<HjemmelParsingService>()
@@ -90,11 +90,11 @@ internal class KafkaOppgaveConsumerTest {
 
         kafkaOppgaveConsumer.listen(oppgaveRecordMock)
 
-        verify(exactly = 0) { oppgaveRepositoryMock.storeHjemmelInMetadata(any(), any()) }
+        verify { oppgaveRepositoryMock.storeHjemmelInMetadata(any(), "MANGLER") }
     }
 
     @Test
-    fun `don't store anything if beskrivelse does not contain hjemmel`() {
+    fun `store MANGLER if beskrivelse does not contain hjemmel`() {
         val oppgaveRepositoryMock = mockk<OppgaveRepository>(relaxed = true)
 
         val hjemmelParsingServiceMock = mockk<HjemmelParsingService>()
@@ -111,6 +111,6 @@ internal class KafkaOppgaveConsumerTest {
 
         kafkaOppgaveConsumer.listen(oppgaveRecordMock)
 
-        verify(exactly = 0) { oppgaveRepositoryMock.storeHjemmelInMetadata(any(), any()) }
+        verify { oppgaveRepositoryMock.storeHjemmelInMetadata(any(), "MANGLER") }
     }
 }
