@@ -23,7 +23,7 @@ class OppgaveService(
         val oppgaverWithNewHjemmel = setHjemmel(oppgaveList)
         val oppgaverSuccessfullyPut = putOppgaver(oppgaverWithNewHjemmel)
 
-        logger.info("Tried to put ${oppgaveList.size} oppgaver with $oppgaverSuccessfullyPut successful")
+        logger.info("Tried to put {} oppgaver with {} successful", oppgaveList.size, oppgaverSuccessfullyPut)
     }
 
     private fun putOppgaver(oppgaverList: List<Oppgave>): Int {
