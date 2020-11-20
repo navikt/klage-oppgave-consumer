@@ -3,6 +3,7 @@ package no.nav.klage.oppgave.clients
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import no.nav.klage.oppgave.clients.KafkaOppgaveConsumer.Companion.MANGLER_HJEMMEL
 import no.nav.klage.oppgave.domain.OppgaveKafkaRecord
 import no.nav.klage.oppgave.repositories.OppgaveRepository
 import no.nav.klage.oppgave.service.HjemmelParsingService
@@ -90,7 +91,7 @@ internal class KafkaOppgaveConsumerTest {
 
         kafkaOppgaveConsumer.listen(oppgaveRecordMock)
 
-        verify { oppgaveRepositoryMock.storeHjemmelInMetadata(any(), "MANGLER") }
+        verify { oppgaveRepositoryMock.storeHjemmelInMetadata(any(), MANGLER_HJEMMEL) }
     }
 
     @Test
@@ -111,6 +112,6 @@ internal class KafkaOppgaveConsumerTest {
 
         kafkaOppgaveConsumer.listen(oppgaveRecordMock)
 
-        verify { oppgaveRepositoryMock.storeHjemmelInMetadata(any(), "MANGLER") }
+        verify { oppgaveRepositoryMock.storeHjemmelInMetadata(any(), MANGLER_HJEMMEL) }
     }
 }
