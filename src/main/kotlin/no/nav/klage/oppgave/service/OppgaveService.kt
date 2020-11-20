@@ -5,7 +5,6 @@ import no.nav.klage.oppgave.clients.HJEMMEL
 import no.nav.klage.oppgave.clients.OppgaveClient
 import no.nav.klage.oppgave.domain.Oppgave
 import no.nav.klage.oppgave.utils.getLogger
-import no.nav.klage.oppgave.utils.getSecureLogger
 import org.springframework.stereotype.Service
 
 @Service
@@ -45,14 +44,14 @@ class OppgaveService(
     private fun fetchOppgaver(): List<Oppgave> {
         var offset = 0
 
-        var oppgaveResponse = oppgaveClient.fetchHjemmel(offset)
+        var oppgaveResponse = oppgaveClient.fetchOppgaver(offset)
 
         val alleOppgaver = mutableListOf<Oppgave>()
 
         while (oppgaveResponse.oppgaver.isNotEmpty()) {
-            alleOppgaver.addAll(oppgaveResponse.oppgaver)
+            alleOppgaver += oppgaveResponse.oppgaver
             offset += FETCH_LIMIT
-            oppgaveResponse = oppgaveClient.fetchHjemmel(offset)
+            oppgaveResponse = oppgaveClient.fetchOppgaver(offset)
         }
 
         return alleOppgaver
@@ -68,7 +67,7 @@ class OppgaveService(
                 } else {
                     it.copy(
                             metadata = HashMap(it.metadata).apply {
-                                put(HJEMMEL, possibleHjemmel[0])
+                                put(HJEMMEL, possibleHjemmel.first())
                             }
                     )
                 }

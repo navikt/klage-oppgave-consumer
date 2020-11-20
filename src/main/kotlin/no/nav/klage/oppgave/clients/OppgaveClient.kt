@@ -33,7 +33,7 @@ class OppgaveClient(
     }
 
     @Retryable
-    fun fetchHjemmel(offset: Int, limit: Int = FETCH_LIMIT) =
+    fun fetchOppgaver(offset: Int, limit: Int = FETCH_LIMIT) =
             logTimingAndWebClientResponseException("getOppgaver ($offset)") {
             oppgaveWebClient.get()
                     .uri { uriBuilder ->
