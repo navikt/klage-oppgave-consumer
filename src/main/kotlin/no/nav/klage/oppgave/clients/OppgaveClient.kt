@@ -27,6 +27,9 @@ class OppgaveClient(
         @Suppress("JAVA_CLASS_ON_COMPANION")
         private val logger = getLogger(javaClass.enclosingClass)
         private val securelogger = getSecureLogger()
+
+        const val BEHANDLINGSTYPE_KLAGE = "ae0058"
+        const val BEHANDLINGSTYPE_ANKE = "ae0046"
     }
 
     @Retryable
@@ -36,6 +39,8 @@ class OppgaveClient(
                     .uri { uriBuilder ->
                         uriBuilder.queryParam("limit", limit)
                         uriBuilder.queryParam("offset", offset)
+                        uriBuilder.queryParam("behandlingstype", BEHANDLINGSTYPE_ANKE)
+                        uriBuilder.queryParam("behandlingstype", BEHANDLINGSTYPE_KLAGE)
                         uriBuilder.build()
                     }
                     .header("X-Correlation-ID", tracer.currentSpan().context().traceIdString())
