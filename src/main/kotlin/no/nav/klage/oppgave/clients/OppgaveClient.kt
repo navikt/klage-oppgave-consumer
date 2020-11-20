@@ -13,7 +13,8 @@ import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import org.springframework.web.reactive.function.client.bodyToMono
 
-const val FETCH_LIMIT = 10
+const val FETCH_LIMIT = 100
+const val HJEMMEL = "HJEMMEL"
 
 @Component
 class OppgaveClient(
@@ -26,8 +27,6 @@ class OppgaveClient(
         @Suppress("JAVA_CLASS_ON_COMPANION")
         private val logger = getLogger(javaClass.enclosingClass)
         private val securelogger = getSecureLogger()
-
-        const val HJEMMEL = "HJEMMEL"
     }
 
     @Retryable
