@@ -3,6 +3,7 @@ package no.nav.klage.oppgave.clients
 import brave.Tracer
 import no.nav.klage.oppgave.domain.Oppgave
 import no.nav.klage.oppgave.domain.OppgaveResponse
+import no.nav.klage.oppgave.exceptions.OppgaveClientException
 import no.nav.klage.oppgave.utils.getLogger
 import no.nav.klage.oppgave.utils.getSecureLogger
 import org.springframework.beans.factory.annotation.Value
@@ -47,7 +48,7 @@ class OppgaveClient(
                     .header("Nav-Consumer-Id", applicationName)
                     .retrieve()
                     .bodyToMono<OppgaveResponse>()
-                    .block() ?: throw RuntimeException("Oppgaver could not be fetched")
+                    .block() ?: throw OppgaveClientException("Oppgaver could not be fetched")
         }
 
     @Retryable
@@ -63,7 +64,7 @@ class OppgaveClient(
                     .bodyValue(oppgave)
                     .retrieve()
                     .bodyToMono<Oppgave>()
-                    .block() ?: throw java.lang.RuntimeException("Oppgave could not be put")
+                    .block() ?: throw OppgaveClientException("Oppgave could not be put")
         }
 
 
@@ -80,10 +81,10 @@ class OppgaveClient(
                     ex.request?.uri ?: "-",
                     ex.responseBodyAsString
             )
-            throw ex
+            throw OppgaveClientException("Caught WebClientResponseException", ex)
         } catch (rtex: RuntimeException) {
             logger.warn("Caught RuntimeException", rtex)
-            throw rtex
+            throw OppgaveClientException("Caught runtimeexception", rtex)
         } finally {
             val end: Long = System.currentTimeMillis()
             logger.info("Method {} took {} millis", methodName, (end - start))
