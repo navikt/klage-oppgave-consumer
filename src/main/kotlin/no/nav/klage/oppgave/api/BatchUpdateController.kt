@@ -1,14 +1,12 @@
 package no.nav.klage.oppgave.api
 
+import no.nav.klage.oppgave.domain.BatchUpdateRequest
 import no.nav.klage.oppgave.domain.BatchUpdateResponse
 import no.nav.klage.oppgave.domain.ResponseStatus
 import no.nav.klage.oppgave.exceptions.OppgaveClientException
 import no.nav.klage.oppgave.service.OppgaveService
 import no.nav.klage.oppgave.utils.getLogger
-import org.springframework.web.bind.annotation.ControllerAdvice
-import org.springframework.web.bind.annotation.ExceptionHandler
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 import org.springframework.web.context.request.WebRequest
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -19,7 +17,7 @@ class BatchUpdateController(
 ) {
 
     @PostMapping("/batchupdate")
-    fun triggerBatchUpdate(): BatchUpdateResponse = oppgaveService.bulkUpdateHjemmel()
+    fun triggerBatchUpdate(@RequestBody request: BatchUpdateRequest) = oppgaveService.bulkUpdateHjemmel()
 
 }
 

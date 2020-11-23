@@ -3,6 +3,7 @@ package no.nav.klage.oppgave.service
 import no.nav.klage.oppgave.clients.FETCH_LIMIT
 import no.nav.klage.oppgave.clients.HJEMMEL
 import no.nav.klage.oppgave.clients.OppgaveClient
+import no.nav.klage.oppgave.domain.BatchUpdateRequest
 import no.nav.klage.oppgave.domain.BatchUpdateResponse
 import no.nav.klage.oppgave.domain.Oppgave
 import no.nav.klage.oppgave.domain.ResponseStatus
@@ -21,15 +22,18 @@ class OppgaveService(
         private val logger = getLogger(javaClass.enclosingClass)
     }
 
-    fun bulkUpdateHjemmel(): BatchUpdateResponse {
-        val oppgaveList = fetchOppgaver()
+    fun bulkUpdateHjemmel(request: BatchUpdateRequest): BatchUpdateResponse {
+        val oppgaveList = fetchOppgaverWithoutHjemmel()
         val oppgaverWithNewHjemmel = setHjemmel(oppgaveList)
-        val oppgaverSuccessfullyPut = putOppgaver(oppgaverWithNewHjemmel)
+        val oppgaverSuccessfullyPut = if (!request.dryRun) {
+            putOppgaver(oppgaverWithNewHjemmel)
+        } else {
+            0
+        }
 
         logger.info("Tried to put {} oppgaver with {} successful", oppgaveList.size, oppgaverSuccessfullyPut)
         val status: ResponseStatus = when(oppgaverSuccessfullyPut) {
             oppgaveList.size -> ResponseStatus.OK
-            0 -> ResponseStatus.ERROR
             else -> ResponseStatus.PARTIAL
         }
         return BatchUpdateResponse(
@@ -55,7 +59,7 @@ class OppgaveService(
         return oppgaverSuccessfullyPut
     }
 
-    private fun fetchOppgaver(): List<Oppgave> {
+    private fun fetchOppgaverWithoutHjemmel(): List<Oppgave> {
         var offset = 0
 
         var oppgaveResponse = oppgaveClient.fetchOppgaver(offset)
@@ -68,13 +72,13 @@ class OppgaveService(
             oppgaveResponse = oppgaveClient.fetchOppgaver(offset)
         }
 
-        return alleOppgaver
+        return alleOppgaver.filter {
+            it.metadata?.get(HJEMMEL) == null
+        }
     }
 
     private fun setHjemmel(oppgaver: List<Oppgave>): List<Oppgave> =
-            oppgaver.filter {
-                it.metadata?.get(HJEMMEL) == null
-            }.mapNotNull {
+            oppgaver.mapNotNull {
                 val possibleHjemmel = hjemmelParsingService.extractHjemmel(it.beskrivelse ?: "")
                 if (possibleHjemmel.isEmpty()) {
                     null
