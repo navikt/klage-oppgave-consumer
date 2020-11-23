@@ -37,14 +37,14 @@ class KafkaConfiguration(
     }
 
     @Bean
-    fun kafkaListenerContainerFactory(): ConcurrentKafkaListenerContainerFactory<String, OppgaveKafkaRecord> {
-        val factory = ConcurrentKafkaListenerContainerFactory<String, OppgaveKafkaRecord>()
+    fun kafkaListenerContainerFactory(): ConcurrentKafkaListenerContainerFactory<String, String> {
+        val factory = ConcurrentKafkaListenerContainerFactory<String, String>()
         factory.consumerFactory = consumerFactory()
         return factory;
     }
 
     @Bean
-    fun consumerFactory(): ConsumerFactory<String, OppgaveKafkaRecord> {
+    fun consumerFactory(): ConsumerFactory<String, String> {
         return DefaultKafkaConsumerFactory(consumerProps());
     }
 
@@ -54,7 +54,7 @@ class KafkaConfiguration(
         props[ConsumerConfig.GROUP_ID_CONFIG] = groupId
         props[ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG] = true
         props[ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java
-        props[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = JsonDeserializer::class.java
+        props[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java
         props[SaslConfigs.SASL_JAAS_CONFIG] =
                 "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"$username\" password=\"$password\";"
         props[SaslConfigs.SASL_MECHANISM] = "PLAIN"
