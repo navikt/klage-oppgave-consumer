@@ -30,8 +30,8 @@ class KafkaOppgaveConsumer(
     fun listenDebug(oppgaveRecord: ConsumerRecord<String, OppgaveKafkaRecord>) {
         logger.debug("Changed oppgave received from Kafka topic: \n{}", oppgaveRecord)
     }
-/*
-    @KafkaListener(topics = ["\${KAFKA_TOPIC}"])
+
+//    @KafkaListener(topics = ["\${KAFKA_TOPIC}"])
     fun listen(oppgaveRecord: ConsumerRecord<String, OppgaveKafkaRecord>) {
         logger.debug("Changed oppgave received from Kafka topic")
         secureLogger.debug("Changed oppgave received from Kafka topic: {}", oppgaveRecord.value())
@@ -73,7 +73,7 @@ class KafkaOppgaveConsumer(
             throw RuntimeException("Could not process oppgave. See more details in secure log.")
         }
     }
-*/
+
     private fun shouldStoreHjemmelInOppgave(hjemmelInOppgave: String?, parsedHjemmel: String): Boolean {
         return when {
             hjemmelInOppgave.isNullOrBlank() -> {
