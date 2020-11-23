@@ -1,5 +1,6 @@
 package no.nav.klage.oppgave.config
 
+import no.nav.klage.oppgave.domain.OppgaveKafkaRecord
 import no.nav.klage.oppgave.utils.getLogger
 import no.nav.slackposter.SlackClient
 import org.apache.kafka.clients.CommonClientConfigs.SECURITY_PROTOCOL_CONFIG
@@ -36,14 +37,14 @@ class KafkaConfiguration(
     }
 
     @Bean
-    fun kafkaListenerContainerFactory(): ConcurrentKafkaListenerContainerFactory<String, String> {
-        val factory = ConcurrentKafkaListenerContainerFactory<String, String>()
+    fun kafkaListenerContainerFactory(): ConcurrentKafkaListenerContainerFactory<String, OppgaveKafkaRecord> {
+        val factory = ConcurrentKafkaListenerContainerFactory<String, OppgaveKafkaRecord>()
         factory.consumerFactory = consumerFactory()
         return factory;
     }
 
     @Bean
-    fun consumerFactory(): ConsumerFactory<String, String> {
+    fun consumerFactory(): ConsumerFactory<String, OppgaveKafkaRecord> {
         return DefaultKafkaConsumerFactory(consumerProps());
     }
 

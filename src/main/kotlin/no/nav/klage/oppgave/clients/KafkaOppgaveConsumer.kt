@@ -27,11 +27,6 @@ class KafkaOppgaveConsumer(
     }
 
     @KafkaListener(topics = ["\${KAFKA_TOPIC}"])
-    fun listenDebug(oppgaveRecord: ConsumerRecord<String, OppgaveKafkaRecord>) {
-        logger.debug("Changed oppgave received from Kafka topic: \n{}", oppgaveRecord)
-    }
-
-//    @KafkaListener(topics = ["\${KAFKA_TOPIC}"])
     fun listen(oppgaveRecord: ConsumerRecord<String, OppgaveKafkaRecord>) {
         logger.debug("Changed oppgave received from Kafka topic")
         secureLogger.debug("Changed oppgave received from Kafka topic: {}", oppgaveRecord.value())
