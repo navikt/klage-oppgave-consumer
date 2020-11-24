@@ -3,6 +3,7 @@ package no.nav.klage.oppgave.clients
 import brave.Tracer
 import no.nav.klage.oppgave.domain.Oppgave
 import no.nav.klage.oppgave.domain.OppgaveResponse
+import no.nav.klage.oppgave.exceptions.OppgaveClientException
 import no.nav.klage.oppgave.utils.getLogger
 import no.nav.klage.oppgave.utils.getSecureLogger
 import org.springframework.beans.factory.annotation.Value
@@ -18,9 +19,9 @@ const val HJEMMEL = "HJEMMEL"
 
 @Component
 class OppgaveClient(
-        private val oppgaveWebClient: WebClient,
-        private val tracer: Tracer,
-        @Value("\${spring.application.name}") private val applicationName: String
+    private val oppgaveWebClient: WebClient,
+    private val tracer: Tracer,
+    @Value("\${spring.application.name}") private val applicationName: String
 ) {
 
     companion object {
@@ -34,36 +35,36 @@ class OppgaveClient(
 
     @Retryable
     fun fetchOppgaver(offset: Int, limit: Int = FETCH_LIMIT) =
-            logTimingAndWebClientResponseException("getOppgaver ($offset)") {
+        logTimingAndWebClientResponseException("getOppgaver ($offset)") {
             oppgaveWebClient.get()
-                    .uri { uriBuilder ->
-                        uriBuilder.queryParam("limit", limit)
-                        uriBuilder.queryParam("offset", offset)
-                        uriBuilder.queryParam("behandlingstype", BEHANDLINGSTYPE_ANKE)
-                        uriBuilder.queryParam("behandlingstype", BEHANDLINGSTYPE_KLAGE)
-                        uriBuilder.build()
-                    }
-                    .header("X-Correlation-ID", tracer.currentSpan().context().traceIdString())
-                    .header("Nav-Consumer-Id", applicationName)
-                    .retrieve()
-                    .bodyToMono<OppgaveResponse>()
-                    .block() ?: throw RuntimeException("Oppgaver could not be fetched")
+                .uri { uriBuilder ->
+                    uriBuilder.queryParam("limit", limit)
+                    uriBuilder.queryParam("offset", offset)
+                    uriBuilder.queryParam("behandlingstype", BEHANDLINGSTYPE_ANKE)
+                    uriBuilder.queryParam("behandlingstype", BEHANDLINGSTYPE_KLAGE)
+                    uriBuilder.build()
+                }
+                .header("X-Correlation-ID", tracer.currentSpan().context().traceIdString())
+                .header("Nav-Consumer-Id", applicationName)
+                .retrieve()
+                .bodyToMono<OppgaveResponse>()
+                .block() ?: throw OppgaveClientException("Oppgaver could not be fetched")
         }
 
     @Retryable
     fun putOppgave(oppgave: Oppgave) =
         logTimingAndWebClientResponseException("putOppgave") {
             oppgaveWebClient.put()
-                    .uri { uriBuilder ->
-                        uriBuilder.pathSegment("{id}").build(oppgave.id)
-                    }
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .header("X-Correlation-ID", tracer.currentSpan().context().traceIdString())
-                    .header("Nav-Consumer-Id", applicationName)
-                    .bodyValue(oppgave)
-                    .retrieve()
-                    .bodyToMono<Oppgave>()
-                    .block() ?: throw java.lang.RuntimeException("Oppgave could not be put")
+                .uri { uriBuilder ->
+                    uriBuilder.pathSegment("{id}").build(oppgave.id)
+                }
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("X-Correlation-ID", tracer.currentSpan().context().traceIdString())
+                .header("Nav-Consumer-Id", applicationName)
+                .bodyValue(oppgave)
+                .retrieve()
+                .bodyToMono<Oppgave>()
+                .block() ?: throw OppgaveClientException("Oppgave could not be put")
         }
 
 
@@ -74,16 +75,16 @@ class OppgaveClient(
         } catch (ex: WebClientResponseException) {
             logger.warn("Caught WebClientResponseException, see securelogs for details")
             securelogger.error(
-                    "Got a {} error calling Oppgave {} {} with message {}",
-                    ex.statusCode,
-                    ex.request?.method ?: "-",
-                    ex.request?.uri ?: "-",
-                    ex.responseBodyAsString
+                "Got a {} error calling Oppgave {} {} with message {}",
+                ex.statusCode,
+                ex.request?.method ?: "-",
+                ex.request?.uri ?: "-",
+                ex.responseBodyAsString
             )
-            throw ex
+            throw OppgaveClientException("Caught WebClientResponseException", ex)
         } catch (rtex: RuntimeException) {
             logger.warn("Caught RuntimeException", rtex)
-            throw rtex
+            throw OppgaveClientException("Caught runtimeexception", rtex)
         } finally {
             val end: Long = System.currentTimeMillis()
             logger.info("Method {} took {} millis", methodName, (end - start))

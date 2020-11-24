@@ -1,8 +1,6 @@
 package no.nav.klage.oppgave.config
 
-import no.nav.klage.oppgave.domain.OppgaveKafkaRecord
 import no.nav.klage.oppgave.utils.getLogger
-import no.nav.slackposter.SlackClient
 import org.apache.kafka.clients.CommonClientConfigs.SECURITY_PROTOCOL_CONFIG
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.config.SaslConfigs
@@ -14,22 +12,22 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory
 import org.springframework.kafka.core.ConsumerFactory
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory
-import org.springframework.kafka.support.serializer.JsonDeserializer
 import java.io.File
 
 
 @Configuration
 class KafkaConfiguration(
-        @Value("\${KAFKA_BOOTSTRAP_SERVERS}")
-        private val bootstrapServers: String,
-        @Value("\${KAFKA_GROUP_ID}")
-        private val groupId: String,
-        @Value("\${SERVICE_USER_USERNAME}")
-        private val username: String,
-        @Value("\${SERVICE_USER_PASSWORD}")
-        private val password: String,
-        @Value("\${spring.application.name}")
-        private val clientId: String) {
+    @Value("\${KAFKA_BOOTSTRAP_SERVERS}")
+    private val bootstrapServers: String,
+    @Value("\${KAFKA_GROUP_ID}")
+    private val groupId: String,
+    @Value("\${SERVICE_USER_USERNAME}")
+    private val username: String,
+    @Value("\${SERVICE_USER_PASSWORD}")
+    private val password: String,
+    @Value("\${spring.application.name}")
+    private val clientId: String
+) {
 
     companion object {
         @Suppress("JAVA_CLASS_ON_COMPANION")
@@ -56,7 +54,7 @@ class KafkaConfiguration(
         props[ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java
         props[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java
         props[SaslConfigs.SASL_JAAS_CONFIG] =
-                "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"$username\" password=\"$password\";"
+            "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"$username\" password=\"$password\";"
         props[SaslConfigs.SASL_MECHANISM] = "PLAIN"
         System.getenv("NAV_TRUSTSTORE_PATH")?.let {
             props[SECURITY_PROTOCOL_CONFIG] = "SASL_SSL"

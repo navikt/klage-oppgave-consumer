@@ -25,11 +25,11 @@ class OppgaveClientConfiguration(private val webClientBuilder: WebClient.Builder
     @Bean("oppgaveWebClient")
     fun oppgaveWebClient(): WebClient {
         return webClientBuilder
-                .defaultHeader("x-nav-apiKey", apiKey)
-                .defaultHeader("Authorization", "Basic ${base64EncodedAuth()}")
-                .baseUrl(oppgaveServiceURL)
-                .clientConnector(ReactorClientHttpConnector(newConnection()))
-                .build()
+            .defaultHeader("x-nav-apiKey", apiKey)
+            .defaultHeader("Authorization", "Basic ${base64EncodedAuth()}")
+            .baseUrl(oppgaveServiceURL)
+            .clientConnector(ReactorClientHttpConnector(newConnection()))
+            .build()
     }
 
     private fun base64EncodedAuth() = Base64.getEncoder().encodeToString("$username:$password".encodeToByteArray())
