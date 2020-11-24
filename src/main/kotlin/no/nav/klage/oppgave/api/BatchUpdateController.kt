@@ -13,11 +13,18 @@ import java.time.format.DateTimeFormatter
 
 @RestController
 class BatchUpdateController(
-        private val oppgaveService: OppgaveService
+    private val oppgaveService: OppgaveService
 ) {
+    companion object {
+        @Suppress("JAVA_CLASS_ON_COMPANION")
+        private val logger = getLogger(javaClass.enclosingClass)
+    }
 
     @PostMapping("/batchupdate")
-    fun triggerBatchUpdate(@RequestBody request: BatchUpdateRequest) = oppgaveService.bulkUpdateHjemmel()
+    fun triggerBatchUpdate(@RequestBody request: BatchUpdateRequest): BatchUpdateResponse {
+        logger.info("Triggered batchUpdate with dryRun = {}", request.dryRun)
+        return oppgaveService.bulkUpdateHjemmel(request)
+    }
 
 }
 
@@ -33,9 +40,9 @@ class BatchUpdateControllerAdvice {
     fun handleException(ex: OppgaveClientException, request: WebRequest): BatchUpdateResponse {
         logger.error("Fetch oppgave failed.", ex)
         return BatchUpdateResponse(
-                finished = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME),
-                status = ResponseStatus.ERROR,
-                message = "Error from batchupdate ${ex.message}"
+            finished = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME),
+            status = ResponseStatus.ERROR,
+            message = "Error from batchupdate ${ex.message}"
         )
     }
 }

@@ -14,8 +14,8 @@ import java.time.format.DateTimeFormatter
 
 @Service
 class OppgaveService(
-        private val oppgaveClient: OppgaveClient,
-        private val hjemmelParsingService: HjemmelParsingService
+    private val oppgaveClient: OppgaveClient,
+    private val hjemmelParsingService: HjemmelParsingService
 ) {
     companion object {
         @Suppress("JAVA_CLASS_ON_COMPANION")
@@ -25,6 +25,9 @@ class OppgaveService(
     fun bulkUpdateHjemmel(request: BatchUpdateRequest): BatchUpdateResponse {
         val oppgaveList = fetchOppgaverWithoutHjemmel()
         val oppgaverWithNewHjemmel = setHjemmel(oppgaveList)
+
+        logger.info("Set hjemmel on {} oppgaver out of {}", oppgaverWithNewHjemmel.size, oppgaveList.size)
+
         val oppgaverSuccessfullyPut = if (!request.dryRun) {
             putOppgaver(oppgaverWithNewHjemmel)
         } else {
@@ -32,14 +35,14 @@ class OppgaveService(
         }
 
         logger.info("Tried to put {} oppgaver with {} successful", oppgaveList.size, oppgaverSuccessfullyPut)
-        val status: ResponseStatus = when(oppgaverSuccessfullyPut) {
+        val status: ResponseStatus = when (oppgaverSuccessfullyPut) {
             oppgaveList.size -> ResponseStatus.OK
             else -> ResponseStatus.PARTIAL
         }
         return BatchUpdateResponse(
-                finished = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME),
-                status = status,
-                message = "$oppgaverSuccessfullyPut stored out og ${oppgaveList.size}"
+            finished = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME),
+            status = status,
+            message = "$oppgaverSuccessfullyPut stored out of ${oppgaveList.size}"
         )
     }
 
@@ -78,17 +81,19 @@ class OppgaveService(
     }
 
     private fun setHjemmel(oppgaver: List<Oppgave>): List<Oppgave> =
-            oppgaver.mapNotNull {
-                val possibleHjemmel = hjemmelParsingService.extractHjemmel(it.beskrivelse ?: "")
-                if (possibleHjemmel.isEmpty()) {
-                    null
-                } else {
-                    it.copy(
-                            metadata = HashMap(it.metadata).apply {
-                                put(HJEMMEL, possibleHjemmel.first())
-                            }
-                    )
+        oppgaver.mapNotNull { oppg ->
+            val possibleHjemmel = hjemmelParsingService.extractHjemmel(oppg.beskrivelse ?: "")
+            if (possibleHjemmel.isEmpty()) {
+                null
+            } else {
+                oppg.copy(
+                    metadata = HashMap(oppg.metadata).apply {
+                        put(HJEMMEL, possibleHjemmel.first())
+                    }
+                ).also {
+                    logger.debug("Extracted hjemmel {} from beskrivelse {}", possibleHjemmel.first(), oppg.beskrivelse)
                 }
             }
+        }
 
 }
