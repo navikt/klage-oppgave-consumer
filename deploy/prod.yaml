@@ -1,1 +1,2 @@
 springProfile: prod-gcp
+ingress: https://klage-oppgave-consumer.internal.nav.no
