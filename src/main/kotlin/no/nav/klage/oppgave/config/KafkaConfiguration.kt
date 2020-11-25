@@ -1,35 +1,34 @@
 package no.nav.klage.oppgave.config
 
-import no.nav.klage.oppgave.domain.OppgaveKafkaRecord
 import no.nav.klage.oppgave.utils.getLogger
-import no.nav.slackposter.SlackClient
 import org.apache.kafka.clients.CommonClientConfigs.SECURITY_PROTOCOL_CONFIG
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.config.SaslConfigs
 import org.apache.kafka.common.config.SslConfigs
-import org.apache.kafka.common.serialization.StringDeserializer
+import org.apache.kafka.common.serialization.ByteArrayDeserializer
+import org.apache.kafka.common.serialization.LongDeserializer
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory
 import org.springframework.kafka.core.ConsumerFactory
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory
-import org.springframework.kafka.support.serializer.JsonDeserializer
 import java.io.File
 
 
 @Configuration
 class KafkaConfiguration(
-        @Value("\${KAFKA_BOOTSTRAP_SERVERS}")
-        private val bootstrapServers: String,
-        @Value("\${KAFKA_GROUP_ID}")
-        private val groupId: String,
-        @Value("\${SERVICE_USER_USERNAME}")
-        private val username: String,
-        @Value("\${SERVICE_USER_PASSWORD}")
-        private val password: String,
-        @Value("\${spring.application.name}")
-        private val clientId: String) {
+    @Value("\${KAFKA_BOOTSTRAP_SERVERS}")
+    private val bootstrapServers: String,
+    @Value("\${KAFKA_GROUP_ID}")
+    private val groupId: String,
+    @Value("\${SERVICE_USER_USERNAME}")
+    private val username: String,
+    @Value("\${SERVICE_USER_PASSWORD}")
+    private val password: String,
+    @Value("\${spring.application.name}")
+    private val clientId: String
+) {
 
     companion object {
         @Suppress("JAVA_CLASS_ON_COMPANION")
@@ -37,14 +36,14 @@ class KafkaConfiguration(
     }
 
     @Bean
-    fun kafkaListenerContainerFactory(): ConcurrentKafkaListenerContainerFactory<String, String> {
-        val factory = ConcurrentKafkaListenerContainerFactory<String, String>()
+    fun kafkaListenerContainerFactory(): ConcurrentKafkaListenerContainerFactory<Long, ByteArray> {
+        val factory = ConcurrentKafkaListenerContainerFactory<Long, ByteArray>()
         factory.consumerFactory = consumerFactory()
         return factory;
     }
 
     @Bean
-    fun consumerFactory(): ConsumerFactory<String, String> {
+    fun consumerFactory(): ConsumerFactory<Long, ByteArray> {
         return DefaultKafkaConsumerFactory(consumerProps());
     }
 
@@ -53,10 +52,10 @@ class KafkaConfiguration(
         props[ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG] = bootstrapServers
         props[ConsumerConfig.GROUP_ID_CONFIG] = groupId
         props[ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG] = true
-        props[ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java
-        props[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java
+        props[ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG] = LongDeserializer::class.java
+        props[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = ByteArrayDeserializer::class.java
         props[SaslConfigs.SASL_JAAS_CONFIG] =
-                "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"$username\" password=\"$password\";"
+            "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"$username\" password=\"$password\";"
         props[SaslConfigs.SASL_MECHANISM] = "PLAIN"
         System.getenv("NAV_TRUSTSTORE_PATH")?.let {
             props[SECURITY_PROTOCOL_CONFIG] = "SASL_SSL"
