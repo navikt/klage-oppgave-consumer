@@ -3,6 +3,7 @@ package no.nav.klage.oppgave.clients
 import brave.Tracer
 import no.nav.klage.oppgave.domain.Oppgave
 import no.nav.klage.oppgave.domain.OppgaveResponse
+import no.nav.klage.oppgave.domain.Statuskategori
 import no.nav.klage.oppgave.exceptions.OppgaveClientException
 import no.nav.klage.oppgave.utils.getLogger
 import no.nav.klage.oppgave.utils.getSecureLogger
@@ -38,6 +39,7 @@ class OppgaveClient(
         logTimingAndWebClientResponseException("getOppgaver ($offset)") {
             oppgaveWebClient.get()
                 .uri { uriBuilder ->
+                    uriBuilder.queryParam("statuskategori", Statuskategori.AAPEN)
                     uriBuilder.queryParam("limit", limit)
                     uriBuilder.queryParam("offset", offset)
                     uriBuilder.queryParam("behandlingstype", BEHANDLINGSTYPE_ANKE)

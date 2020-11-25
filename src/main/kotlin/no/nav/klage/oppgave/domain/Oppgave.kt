@@ -125,3 +125,7 @@ data class OppgaveResponse(
     val antallTreffTotalt: Int,
     val oppgaver: List<Oppgave>
 )
+
+enum class Statuskategori {
+    AAPEN, AVSLUTTET
+}
