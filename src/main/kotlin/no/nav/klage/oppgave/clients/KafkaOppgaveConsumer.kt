@@ -1,5 +1,6 @@
 package no.nav.klage.oppgave.clients
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.klage.oppgave.domain.OppgaveKafkaRecord
 import no.nav.klage.oppgave.domain.OppgaveKafkaRecord.MetadataKey.HJEMMEL
 import no.nav.klage.oppgave.repositories.OppgaveRepository
@@ -24,20 +25,17 @@ class KafkaOppgaveConsumer(
         private val secureLogger = getSecureLogger()
 
         const val MANGLER_HJEMMEL = "MANGLER"
+
+        private val mapper = jacksonObjectMapper()
     }
 
     @KafkaListener(topics = ["\${KAFKA_TOPIC}"])
-    fun listen2(oppgaveRecord: ConsumerRecord<Long, ByteArray>) {
-        logger.debug("Changed oppgave received from Kafka topic: {}", oppgaveRecord)
-    }
-
-    //    @KafkaListener(topics = ["\${KAFKA_TOPIC}"])
-    fun listen(oppgaveRecord: ConsumerRecord<String, OppgaveKafkaRecord>) {
+    fun listen(oppgaveRecord: ConsumerRecord<String, String>) {
         logger.debug("Changed oppgave received from Kafka topic")
         secureLogger.debug("Changed oppgave received from Kafka topic: {}", oppgaveRecord.value())
 
         runCatching {
-            val oppgave = oppgaveRecord.value()
+            val oppgave = oppgaveRecord.value().toOppgave()
             oppgave.logIt()
 
             logger.debug("Attempting to extract hjemler from beskrivelse")
@@ -51,7 +49,7 @@ class KafkaOppgaveConsumer(
                 if (foundHjemler.isNotEmpty()) {
                     logger.debug("Found hjemler: {}. Picking first if many.", foundHjemler)
 
-                    if (shouldStoreHjemmelInOppgave(oppgave.metadata[HJEMMEL], foundHjemler.first())) {
+                    if (shouldStoreHjemmelInOppgave(oppgave.metadata?.get(HJEMMEL), foundHjemler.first())) {
                         logger.debug("Storing new hjemmel in oppgave")
                         oppgaveRepository.storeHjemmelInMetadata(oppgave.id, foundHjemler.first())
                     } else {
@@ -73,6 +71,8 @@ class KafkaOppgaveConsumer(
             throw RuntimeException("Could not process oppgave. See more details in secure log.")
         }
     }
+
+    private fun String.toOppgave() = mapper.readValue(this, OppgaveKafkaRecord::class.java)
 
     private fun shouldStoreHjemmelInOppgave(hjemmelInOppgave: String?, parsedHjemmel: String): Boolean {
         return when {

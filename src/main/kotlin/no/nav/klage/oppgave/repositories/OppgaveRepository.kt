@@ -12,7 +12,7 @@ class OppgaveRepository {
     }
 
     fun storeHjemmelInMetadata(oppgaveId: Long, hjemmel: String) {
-        logger.debug("Dry run: storeHjemmelInMetadata. OppgaveId: {}, hjemmel: {}", oppgaveId, hjemmel)
+        logger.debug("'hardcoded dry run': storeHjemmelInMetadata. OppgaveId: {}, hjemmel: {}", oppgaveId, hjemmel)
     }
 }
 // Fetch batch

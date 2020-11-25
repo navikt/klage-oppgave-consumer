@@ -5,8 +5,8 @@ import org.apache.kafka.clients.CommonClientConfigs.SECURITY_PROTOCOL_CONFIG
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.config.SaslConfigs
 import org.apache.kafka.common.config.SslConfigs
-import org.apache.kafka.common.serialization.ByteArrayDeserializer
 import org.apache.kafka.common.serialization.LongDeserializer
+import org.apache.kafka.common.serialization.StringDeserializer
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -36,14 +36,14 @@ class KafkaConfiguration(
     }
 
     @Bean
-    fun kafkaListenerContainerFactory(): ConcurrentKafkaListenerContainerFactory<Long, ByteArray> {
-        val factory = ConcurrentKafkaListenerContainerFactory<Long, ByteArray>()
+    fun kafkaListenerContainerFactory(): ConcurrentKafkaListenerContainerFactory<Long, String> {
+        val factory = ConcurrentKafkaListenerContainerFactory<Long, String>()
         factory.consumerFactory = consumerFactory()
         return factory;
     }
 
     @Bean
-    fun consumerFactory(): ConsumerFactory<Long, ByteArray> {
+    fun consumerFactory(): ConsumerFactory<Long, String> {
         return DefaultKafkaConsumerFactory(consumerProps());
     }
 
@@ -53,7 +53,7 @@ class KafkaConfiguration(
         props[ConsumerConfig.GROUP_ID_CONFIG] = groupId
         props[ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG] = true
         props[ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG] = LongDeserializer::class.java
-        props[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = ByteArrayDeserializer::class.java
+        props[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java
         props[SaslConfigs.SASL_JAAS_CONFIG] =
             "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"$username\" password=\"$password\";"
         props[SaslConfigs.SASL_MECHANISM] = "PLAIN"

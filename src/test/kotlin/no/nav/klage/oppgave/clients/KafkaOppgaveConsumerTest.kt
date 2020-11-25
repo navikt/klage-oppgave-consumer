@@ -4,10 +4,10 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.klage.oppgave.clients.KafkaOppgaveConsumer.Companion.MANGLER_HJEMMEL
-import no.nav.klage.oppgave.domain.OppgaveKafkaRecord
 import no.nav.klage.oppgave.repositories.OppgaveRepository
 import no.nav.klage.oppgave.service.HjemmelParsingService
 import org.apache.kafka.clients.consumer.ConsumerRecord
+import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Test
 
 internal class KafkaOppgaveConsumerTest {
@@ -19,12 +19,8 @@ internal class KafkaOppgaveConsumerTest {
         val hjemmelParsingServiceMock = mockk<HjemmelParsingService>()
         every { hjemmelParsingServiceMock.extractHjemmel(any()) } returns listOf("8-14")
 
-        val oppgaveRecordMock = mockk<ConsumerRecord<String, OppgaveKafkaRecord>>()
-        every { oppgaveRecordMock.value() } returns OppgaveKafkaRecord(
-            id = 1,
-            metadata = emptyMap(),
-            beskrivelse = "notEmptyString"
-        )
+        val oppgaveRecordMock = mockk<ConsumerRecord<String, String>>()
+        every { oppgaveRecordMock.value() } returns getJsonWithHjemmelInBeskrivelse()
 
         val kafkaOppgaveConsumer = KafkaOppgaveConsumer(mockk(), hjemmelParsingServiceMock, oppgaveRepositoryMock)
 
@@ -40,11 +36,9 @@ internal class KafkaOppgaveConsumerTest {
         val hjemmelParsingServiceMock = mockk<HjemmelParsingService>()
         every { hjemmelParsingServiceMock.extractHjemmel(any()) } returns listOf("22-19")
 
-        val oppgaveRecordMock = mockk<ConsumerRecord<String, OppgaveKafkaRecord>>()
-        every { oppgaveRecordMock.value() } returns OppgaveKafkaRecord(
-            id = 1,
-            metadata = mapOf(OppgaveKafkaRecord.MetadataKey.HJEMMEL to "8-14"),
-            beskrivelse = "notEmptyString"
+        val oppgaveRecordMock = mockk<ConsumerRecord<String, String>>()
+        every { oppgaveRecordMock.value() } returns getJsonWithDifferentHjemmelInBeskrivelseAndMetadata(
+            hjemmelInMetadata = "8-14"
         )
 
         val kafkaOppgaveConsumer = KafkaOppgaveConsumer(mockk(), hjemmelParsingServiceMock, oppgaveRepositoryMock)
@@ -62,11 +56,9 @@ internal class KafkaOppgaveConsumerTest {
         val hjemmel = "8-14"
         every { hjemmelParsingServiceMock.extractHjemmel(any()) } returns listOf(hjemmel)
 
-        val oppgaveRecordMock = mockk<ConsumerRecord<String, OppgaveKafkaRecord>>()
-        every { oppgaveRecordMock.value() } returns OppgaveKafkaRecord(
-            id = 1,
-            metadata = mapOf(OppgaveKafkaRecord.MetadataKey.HJEMMEL to hjemmel),
-            beskrivelse = "notEmptyString"
+        val oppgaveRecordMock = mockk<ConsumerRecord<String, String>>()
+        every { oppgaveRecordMock.value() } returns getJsonWithDifferentHjemmelInBeskrivelseAndMetadata(
+            hjemmelInMetadata = hjemmel
         )
 
         val kafkaOppgaveConsumer = KafkaOppgaveConsumer(mockk(), hjemmelParsingServiceMock, oppgaveRepositoryMock)
@@ -84,8 +76,8 @@ internal class KafkaOppgaveConsumerTest {
         val hjemmel = "8-14"
         every { hjemmelParsingServiceMock.extractHjemmel(any()) } returns listOf(hjemmel)
 
-        val oppgaveRecordMock = mockk<ConsumerRecord<String, OppgaveKafkaRecord>>()
-        every { oppgaveRecordMock.value() } returns OppgaveKafkaRecord(id = 1, metadata = emptyMap())
+        val oppgaveRecordMock = mockk<ConsumerRecord<String, String>>()
+        every { oppgaveRecordMock.value() } returns getJsonWithoutBeskrivelse()
 
         val kafkaOppgaveConsumer = KafkaOppgaveConsumer(mockk(), hjemmelParsingServiceMock, oppgaveRepositoryMock)
 
@@ -95,18 +87,14 @@ internal class KafkaOppgaveConsumerTest {
     }
 
     @Test
-    fun `store MANGLER if beskrivelse does not contain hjemmel`() {
+    fun `store MANGLER if beskrivelse or metadata does not contain hjemmel`() {
         val oppgaveRepositoryMock = mockk<OppgaveRepository>(relaxed = true)
 
         val hjemmelParsingServiceMock = mockk<HjemmelParsingService>()
         every { hjemmelParsingServiceMock.extractHjemmel(any()) } returns emptyList()
 
-        val oppgaveRecordMock = mockk<ConsumerRecord<String, OppgaveKafkaRecord>>()
-        every { oppgaveRecordMock.value() } returns OppgaveKafkaRecord(
-            id = 1,
-            metadata = emptyMap(),
-            beskrivelse = "noe her som ikke er hjemmel"
-        )
+        val oppgaveRecordMock = mockk<ConsumerRecord<String, String>>()
+        every { oppgaveRecordMock.value() } returns getJsonWithoutHjemmel()
 
         val kafkaOppgaveConsumer = KafkaOppgaveConsumer(mockk(), hjemmelParsingServiceMock, oppgaveRepositoryMock)
 
@@ -114,4 +102,75 @@ internal class KafkaOppgaveConsumerTest {
 
         verify { oppgaveRepositoryMock.storeHjemmelInMetadata(any(), MANGLER_HJEMMEL) }
     }
+
+    @Language("JSON")
+    fun getJsonWithHjemmelInBeskrivelse() = """
+        {
+          "id": 301848147,
+          "tildeltEnhetsnr": "4291",
+          "endretAvEnhetsnr": "4291",
+          "opprettetAvEnhetsnr": "4418",
+          "tilordnetRessurs": "Z994488",
+          "tema": "SYK",
+          "oppgavetype": "BEH_SAK_MK",
+          "behandlingstype": "ae0058",
+          "versjon": 25,
+          "beskrivelse": "--- 8-14",
+          "someOtherField": "random"
+        }
+    """.trimIndent()
+
+    @Language("JSON")
+    fun getJsonWithoutBeskrivelse() = """
+        {
+          "id": 301848147,
+          "tildeltEnhetsnr": "4291",
+          "endretAvEnhetsnr": "4291",
+          "opprettetAvEnhetsnr": "4418",
+          "tilordnetRessurs": "Z994488",
+          "tema": "SYK",
+          "oppgavetype": "BEH_SAK_MK",
+          "behandlingstype": "ae0058",
+          "versjon": 25,
+          "someOtherField": "random"
+        }
+    """.trimIndent()
+
+    @Language("JSON")
+    fun getJsonWithoutHjemmel() = """
+        {
+          "id": 301848147,
+          "tildeltEnhetsnr": "4291",
+          "endretAvEnhetsnr": "4291",
+          "opprettetAvEnhetsnr": "4418",
+          "tilordnetRessurs": "Z994488",
+          "tema": "SYK",
+          "oppgavetype": "BEH_SAK_MK",
+          "behandlingstype": "ae0058",
+          "versjon": 25,
+          "beskrivelse": "--- 8-14",
+          "someOtherField": "random"
+        }
+    """.trimIndent()
+
+    @Language("JSON")
+    fun getJsonWithDifferentHjemmelInBeskrivelseAndMetadata(hjemmelInMetadata: String) = """
+        {
+          "id": 301848147,
+          "tildeltEnhetsnr": "4291",
+          "endretAvEnhetsnr": "4291",
+          "opprettetAvEnhetsnr": "4418",
+          "journalpostId": "444997220",
+          "tilordnetRessurs": "Z994488",
+          "tema": "SYK",
+          "oppgavetype": "BEH_SAK_MK",
+          "behandlingstype": "ae0058",
+          "versjon": 25,
+          "beskrivelse": "--- 6-66",
+          "someOtherField": "random",
+          "metadata": {
+            "HJEMMEL": "$hjemmelInMetadata"
+          }
+        }
+    """.trimIndent()
 }
