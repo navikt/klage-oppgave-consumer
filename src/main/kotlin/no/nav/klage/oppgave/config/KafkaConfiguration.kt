@@ -25,9 +25,7 @@ class KafkaConfiguration(
     @Value("\${SERVICE_USER_USERNAME}")
     private val username: String,
     @Value("\${SERVICE_USER_PASSWORD}")
-    private val password: String,
-    @Value("\${spring.application.name}")
-    private val clientId: String
+    private val password: String
 ) {
 
     companion object {
