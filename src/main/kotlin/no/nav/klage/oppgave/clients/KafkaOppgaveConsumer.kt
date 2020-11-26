@@ -31,38 +31,40 @@ class KafkaOppgaveConsumer(
 
     @KafkaListener(topics = ["\${KAFKA_TOPIC}"])
     fun listen(oppgaveRecord: ConsumerRecord<String, String>) {
-        logger.debug("Changed oppgave received from Kafka topic")
-        secureLogger.debug("Changed oppgave received from Kafka topic: {}", oppgaveRecord.value())
-
         runCatching {
             val oppgave = oppgaveRecord.value().toOppgave()
-            oppgave.logIt()
 
-            logger.debug("Attempting to extract hjemler from beskrivelse")
+            if (oppgave.isKlage()) {
+                logger.debug("Changed klage-oppgave received from Kafka topic")
 
-            if (oppgave.beskrivelse.isNullOrBlank()) {
-                logger.debug("Beskrivelse was empty or null. Setting HJEMMEL to {}", MANGLER_HJEMMEL)
-                oppgaveRepository.storeHjemmelInMetadata(oppgave.id, MANGLER_HJEMMEL)
-            } else {
-                val foundHjemler = hjemmelParsingService.extractHjemmel(oppgave.beskrivelse)
+                oppgave.logIt()
 
-                if (foundHjemler.isNotEmpty()) {
-                    logger.debug("Found hjemler: {}. Picking first if many.", foundHjemler)
+                logger.debug("Attempting to extract hjemler from beskrivelse")
 
-                    if (shouldStoreHjemmelInOppgave(oppgave.metadata?.get(HJEMMEL), foundHjemler.first())) {
-                        logger.debug("Storing new hjemmel in oppgave")
-                        oppgaveRepository.storeHjemmelInMetadata(oppgave.id, foundHjemler.first())
-                    } else {
-                        logger.debug("No need to store hjemmel")
-                    }
-                } else {
-                    logger.debug("No hjemler found in beskrivelse. See more in secure log.")
-                    secureLogger.debug(
-                        "No hjemler found in beskrivelse. Setting HJEMMEL to {}. Beskrivelse: {}",
-                        MANGLER_HJEMMEL,
-                        oppgave.beskrivelse
-                    )
+                if (oppgave.beskrivelse.isNullOrBlank()) {
+                    logger.debug("Beskrivelse was empty or null. Setting HJEMMEL to {}", MANGLER_HJEMMEL)
                     oppgaveRepository.storeHjemmelInMetadata(oppgave.id, MANGLER_HJEMMEL)
+                } else {
+                    val foundHjemler = hjemmelParsingService.extractHjemmel(oppgave.beskrivelse)
+
+                    if (foundHjemler.isNotEmpty()) {
+                        logger.debug("Found hjemler: {}. Picking first if many.", foundHjemler)
+
+                        if (shouldStoreHjemmelInOppgave(oppgave.metadata?.get(HJEMMEL), foundHjemler.first())) {
+                            logger.debug("Storing new hjemmel in oppgave")
+                            oppgaveRepository.storeHjemmelInMetadata(oppgave.id, foundHjemler.first())
+                        } else {
+                            logger.debug("No need to store hjemmel")
+                        }
+                    } else {
+                        logger.debug("No hjemler found in beskrivelse. See more in secure log.")
+                        secureLogger.debug(
+                            "No hjemler found in beskrivelse. Setting HJEMMEL to {}. Beskrivelse: {}",
+                            MANGLER_HJEMMEL,
+                            oppgave.beskrivelse
+                        )
+                        oppgaveRepository.storeHjemmelInMetadata(oppgave.id, MANGLER_HJEMMEL)
+                    }
                 }
             }
         }.onFailure {

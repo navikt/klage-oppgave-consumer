@@ -3,6 +3,12 @@ package no.nav.klage.oppgave.domain
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import java.time.LocalDate
 
+const val BEHANDLINGSTYPE_KLAGE = "ae0058"
+
+/**
+ * Not reading all properties from record. There are some weird date formats
+ * that we must handle later.
+ */
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class OppgaveKafkaRecord(
     val id: Long,
@@ -17,6 +23,9 @@ data class OppgaveKafkaRecord(
     val beskrivelse: String? = null,
     val metadata: Map<MetadataKey, String>?
 ) {
+
+    fun isKlage() = behandlingstype == BEHANDLINGSTYPE_KLAGE
+
     enum class MetadataKey {
         NORM_DATO, REVURDERINGSTYPE, SOKNAD_ID, KRAV_ID, MOTTATT_DATO, EKSTERN_HENVENDELSE_ID, SKANNET_DATO, RINA_SAKID, HJEMMEL
     }
