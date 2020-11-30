@@ -14,6 +14,8 @@ import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import org.springframework.web.reactive.function.client.bodyToMono
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 const val FETCH_LIMIT = 100
 const val HJEMMEL = "HJEMMEL"
@@ -35,7 +37,7 @@ class OppgaveClient(
     }
 
     @Retryable
-    fun fetchOppgaver(offset: Int, limit: Int = FETCH_LIMIT) =
+    fun fetchOppgaver(includeFrom: LocalDate?, offset: Int, limit: Int = FETCH_LIMIT) =
         logTimingAndWebClientResponseException("getOppgaver ($offset)") {
             oppgaveWebClient.get()
                 .uri { uriBuilder ->
@@ -44,6 +46,9 @@ class OppgaveClient(
                     uriBuilder.queryParam("offset", offset)
                     uriBuilder.queryParam("behandlingstype", BEHANDLINGSTYPE_ANKE)
                     uriBuilder.queryParam("behandlingstype", BEHANDLINGSTYPE_KLAGE)
+                    includeFrom?.let {
+                        uriBuilder.queryParam("opprettetFom", DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(it))
+                    }
                     uriBuilder.build()
                 }
                 .header("X-Correlation-ID", tracer.currentSpan().context().traceIdString())

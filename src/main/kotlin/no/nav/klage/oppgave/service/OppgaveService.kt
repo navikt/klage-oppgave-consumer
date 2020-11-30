@@ -9,6 +9,7 @@ import no.nav.klage.oppgave.domain.Oppgave
 import no.nav.klage.oppgave.domain.ResponseStatus
 import no.nav.klage.oppgave.utils.getLogger
 import org.springframework.stereotype.Service
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -23,7 +24,7 @@ class OppgaveService(
     }
 
     fun bulkUpdateHjemmel(request: BatchUpdateRequest): BatchUpdateResponse {
-        val oppgaveList = fetchOppgaverWithoutHjemmel()
+        val oppgaveList = fetchOppgaverWithoutHjemmel(request.includeFrom)
         val oppgaverWithNewHjemmel = setHjemmel(oppgaveList)
 
         logger.info("Set hjemmel on {} oppgaver out of {}", oppgaverWithNewHjemmel.size, oppgaveList.size)
@@ -62,17 +63,17 @@ class OppgaveService(
         return oppgaverSuccessfullyPut
     }
 
-    private fun fetchOppgaverWithoutHjemmel(): List<Oppgave> {
+    private fun fetchOppgaverWithoutHjemmel(includeFrom: LocalDate?): List<Oppgave> {
         var offset = 0
 
-        var oppgaveResponse = oppgaveClient.fetchOppgaver(offset)
+        var oppgaveResponse = oppgaveClient.fetchOppgaver(includeFrom, offset)
 
         val alleOppgaver = mutableListOf<Oppgave>()
 
         while (oppgaveResponse.oppgaver.isNotEmpty()) {
             alleOppgaver += oppgaveResponse.oppgaver
             offset += FETCH_LIMIT
-            oppgaveResponse = oppgaveClient.fetchOppgaver(offset)
+            oppgaveResponse = oppgaveClient.fetchOppgaver(includeFrom, offset)
         }
 
         return alleOppgaver.filter {
