@@ -42,7 +42,7 @@ spec:
   webproxy: true
   envFrom:
     - secret: srvklage-saksbeh
-    - secret: oppgave-apikeys
+    - secret: oppgave-apikey
   env:
     - name: SPRING_PROFILES_ACTIVE
       value: {{springProfile}}
