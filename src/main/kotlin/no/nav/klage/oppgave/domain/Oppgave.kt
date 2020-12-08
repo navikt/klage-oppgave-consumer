@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import java.time.LocalDate
 
 const val BEHANDLINGSTYPE_KLAGE = "ae0058"
+const val KLAGEENHET_PREFIX = "42"
 
 /**
  * Not reading all properties from record. There are some weird date formats
@@ -25,6 +26,7 @@ data class OppgaveKafkaRecord(
 ) {
 
     fun isKlage() = behandlingstype == BEHANDLINGSTYPE_KLAGE
+    fun isTildeltKlageenhet() = tildeltEnhetsnr?.startsWith(KLAGEENHET_PREFIX) == true
 
     enum class MetadataKey {
         NORM_DATO, REVURDERINGSTYPE, SOKNAD_ID, KRAV_ID, MOTTATT_DATO, EKSTERN_HENVENDELSE_ID, SKANNET_DATO, RINA_SAKID, HJEMMEL
