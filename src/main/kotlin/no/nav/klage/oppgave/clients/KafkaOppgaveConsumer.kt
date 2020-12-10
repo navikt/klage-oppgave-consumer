@@ -3,8 +3,8 @@ package no.nav.klage.oppgave.clients
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.klage.oppgave.domain.OppgaveKafkaRecord
 import no.nav.klage.oppgave.domain.OppgaveKafkaRecord.MetadataKey.HJEMMEL
-import no.nav.klage.oppgave.repositories.OppgaveRepository
 import no.nav.klage.oppgave.service.HjemmelParsingService
+import no.nav.klage.oppgave.service.OppgaveService
 import no.nav.klage.oppgave.utils.getLogger
 import no.nav.klage.oppgave.utils.getSecureLogger
 import no.nav.slackposter.SlackClient
@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component
 class KafkaOppgaveConsumer(
     private val slackClient: SlackClient,
     private val hjemmelParsingService: HjemmelParsingService,
-    private val oppgaveRepository: OppgaveRepository
+    private val oppgaveService: OppgaveService
 ) {
 
     companion object {
@@ -43,7 +43,7 @@ class KafkaOppgaveConsumer(
 
                 if (oppgave.beskrivelse.isNullOrBlank()) {
                     logger.debug("Beskrivelse was empty or null. Setting HJEMMEL to {}", MANGLER_HJEMMEL)
-                    oppgaveRepository.storeHjemmelInMetadata(oppgave.id, MANGLER_HJEMMEL)
+                    oppgaveService.updateHjemmel(oppgave.id, MANGLER_HJEMMEL)
                 } else {
                     val foundHjemler = hjemmelParsingService.extractHjemmel(oppgave.beskrivelse)
 
@@ -52,7 +52,7 @@ class KafkaOppgaveConsumer(
 
                         if (shouldStoreHjemmelInOppgave(oppgave.metadata?.get(HJEMMEL), foundHjemler.first())) {
                             logger.debug("Storing new hjemmel in oppgave")
-                            oppgaveRepository.storeHjemmelInMetadata(oppgave.id, foundHjemler.first())
+                            oppgaveService.updateHjemmel(oppgave.id, foundHjemler.first())
                         } else {
                             logger.debug("No need to store hjemmel")
                         }
@@ -63,7 +63,7 @@ class KafkaOppgaveConsumer(
                             MANGLER_HJEMMEL,
                             oppgave.beskrivelse
                         )
-                        oppgaveRepository.storeHjemmelInMetadata(oppgave.id, MANGLER_HJEMMEL)
+                        oppgaveService.updateHjemmel(oppgave.id, MANGLER_HJEMMEL)
                     }
                 }
             }

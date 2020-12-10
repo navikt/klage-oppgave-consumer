@@ -74,6 +74,19 @@ class OppgaveClient(
                 .block() ?: throw OppgaveClientException("Oppgave could not be put")
         }
 
+    @Retryable
+    fun getOppgave(oppgaveId: Long) =
+        logTimingAndWebClientResponseException("getOppgave") {
+            oppgaveWebClient.get()
+                .uri { uriBuilder ->
+                    uriBuilder.pathSegment("{id}").build(oppgaveId)
+                }
+                .header("X-Correlation-ID", tracer.currentSpan().context().traceIdString())
+                .header("Nav-Consumer-Id", applicationName)
+                .retrieve()
+                .bodyToMono<Oppgave>()
+                .block() ?: throw OppgaveClientException("Oppgave could not be fetched")
+        }
 
     private fun <T> logTimingAndWebClientResponseException(methodName: String, function: () -> T): T {
         val start: Long = System.currentTimeMillis()

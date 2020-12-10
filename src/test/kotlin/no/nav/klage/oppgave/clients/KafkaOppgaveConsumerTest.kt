@@ -4,8 +4,8 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.klage.oppgave.clients.KafkaOppgaveConsumer.Companion.MANGLER_HJEMMEL
-import no.nav.klage.oppgave.repositories.OppgaveRepository
 import no.nav.klage.oppgave.service.HjemmelParsingService
+import no.nav.klage.oppgave.service.OppgaveService
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Test
@@ -14,7 +14,7 @@ internal class KafkaOppgaveConsumerTest {
 
     @Test
     fun `store found hjemmel when there is no previous hjemmel`() {
-        val oppgaveRepositoryMock = mockk<OppgaveRepository>(relaxed = true)
+        val oppgaveServiceMock = mockk<OppgaveService>(relaxed = true)
 
         val hjemmelParsingServiceMock = mockk<HjemmelParsingService>()
         every { hjemmelParsingServiceMock.extractHjemmel(any()) } returns listOf("8-14")
@@ -22,16 +22,16 @@ internal class KafkaOppgaveConsumerTest {
         val oppgaveRecordMock = mockk<ConsumerRecord<String, String>>()
         every { oppgaveRecordMock.value() } returns getJsonWithHjemmelInBeskrivelse()
 
-        val kafkaOppgaveConsumer = KafkaOppgaveConsumer(mockk(), hjemmelParsingServiceMock, oppgaveRepositoryMock)
+        val kafkaOppgaveConsumer = KafkaOppgaveConsumer(mockk(), hjemmelParsingServiceMock, oppgaveServiceMock)
 
         kafkaOppgaveConsumer.listen(oppgaveRecordMock)
 
-        verify { oppgaveRepositoryMock.storeHjemmelInMetadata(any(), any()) }
+        verify { oppgaveServiceMock.updateHjemmel(any(), any()) }
     }
 
     @Test
     fun `store found hjemmel when there is a previous different hjemmel`() {
-        val oppgaveRepositoryMock = mockk<OppgaveRepository>(relaxed = true)
+        val oppgaveServiceMock = mockk<OppgaveService>(relaxed = true)
 
         val hjemmelParsingServiceMock = mockk<HjemmelParsingService>()
         every { hjemmelParsingServiceMock.extractHjemmel(any()) } returns listOf("22-19")
@@ -41,16 +41,16 @@ internal class KafkaOppgaveConsumerTest {
             hjemmelInMetadata = "8-14"
         )
 
-        val kafkaOppgaveConsumer = KafkaOppgaveConsumer(mockk(), hjemmelParsingServiceMock, oppgaveRepositoryMock)
+        val kafkaOppgaveConsumer = KafkaOppgaveConsumer(mockk(), hjemmelParsingServiceMock, oppgaveServiceMock)
 
         kafkaOppgaveConsumer.listen(oppgaveRecordMock)
 
-        verify { oppgaveRepositoryMock.storeHjemmelInMetadata(any(), any()) }
+        verify { oppgaveServiceMock.updateHjemmel(any(), any()) }
     }
 
     @Test
     fun `don't store found hjemmel when previously stored hjemmel is equal`() {
-        val oppgaveRepositoryMock = mockk<OppgaveRepository>(relaxed = true)
+        val oppgaveServiceMock = mockk<OppgaveService>(relaxed = true)
 
         val hjemmelParsingServiceMock = mockk<HjemmelParsingService>()
         val hjemmel = "8-14"
@@ -61,16 +61,16 @@ internal class KafkaOppgaveConsumerTest {
             hjemmelInMetadata = hjemmel
         )
 
-        val kafkaOppgaveConsumer = KafkaOppgaveConsumer(mockk(), hjemmelParsingServiceMock, oppgaveRepositoryMock)
+        val kafkaOppgaveConsumer = KafkaOppgaveConsumer(mockk(), hjemmelParsingServiceMock, oppgaveServiceMock)
 
         kafkaOppgaveConsumer.listen(oppgaveRecordMock)
 
-        verify(exactly = 0) { oppgaveRepositoryMock.storeHjemmelInMetadata(any(), any()) }
+        verify(exactly = 0) { oppgaveServiceMock.updateHjemmel(any(), any()) }
     }
 
     @Test
     fun `store MANGLER if beskrivelse is empty`() {
-        val oppgaveRepositoryMock = mockk<OppgaveRepository>(relaxed = true)
+        val oppgaveServiceMock = mockk<OppgaveService>(relaxed = true)
 
         val hjemmelParsingServiceMock = mockk<HjemmelParsingService>()
         val hjemmel = "8-14"
@@ -79,16 +79,16 @@ internal class KafkaOppgaveConsumerTest {
         val oppgaveRecordMock = mockk<ConsumerRecord<String, String>>()
         every { oppgaveRecordMock.value() } returns getJsonWithoutBeskrivelse()
 
-        val kafkaOppgaveConsumer = KafkaOppgaveConsumer(mockk(), hjemmelParsingServiceMock, oppgaveRepositoryMock)
+        val kafkaOppgaveConsumer = KafkaOppgaveConsumer(mockk(), hjemmelParsingServiceMock, oppgaveServiceMock)
 
         kafkaOppgaveConsumer.listen(oppgaveRecordMock)
 
-        verify { oppgaveRepositoryMock.storeHjemmelInMetadata(any(), MANGLER_HJEMMEL) }
+        verify { oppgaveServiceMock.updateHjemmel(any(), MANGLER_HJEMMEL) }
     }
 
     @Test
     fun `store MANGLER if beskrivelse or metadata does not contain hjemmel`() {
-        val oppgaveRepositoryMock = mockk<OppgaveRepository>(relaxed = true)
+        val oppgaveServiceMock = mockk<OppgaveService>(relaxed = true)
 
         val hjemmelParsingServiceMock = mockk<HjemmelParsingService>()
         every { hjemmelParsingServiceMock.extractHjemmel(any()) } returns emptyList()
@@ -96,11 +96,11 @@ internal class KafkaOppgaveConsumerTest {
         val oppgaveRecordMock = mockk<ConsumerRecord<String, String>>()
         every { oppgaveRecordMock.value() } returns getJsonWithoutHjemmel()
 
-        val kafkaOppgaveConsumer = KafkaOppgaveConsumer(mockk(), hjemmelParsingServiceMock, oppgaveRepositoryMock)
+        val kafkaOppgaveConsumer = KafkaOppgaveConsumer(mockk(), hjemmelParsingServiceMock, oppgaveServiceMock)
 
         kafkaOppgaveConsumer.listen(oppgaveRecordMock)
 
-        verify { oppgaveRepositoryMock.storeHjemmelInMetadata(any(), MANGLER_HJEMMEL) }
+        verify { oppgaveServiceMock.updateHjemmel(any(), MANGLER_HJEMMEL) }
     }
 
     @Language("JSON")
