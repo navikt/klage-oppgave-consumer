@@ -24,7 +24,12 @@ class OppgaveService(
     }
 
     fun bulkUpdateHjemmel(request: BatchUpdateRequest): BatchUpdateResponse {
-        val oppgaveList = fetchOppgaverWithoutHjemmel(request.includeFrom)
+        val oppgaveList = if (request.oppgaveId != null) {
+            listOf(oppgaveClient.getOppgave(request.oppgaveId))
+        } else {
+            fetchOppgaverWithoutHjemmel(request.includeFrom)
+        }
+
         val oppgaverWithNewHjemmel = setHjemmel(oppgaveList)
 
         logger.info("Set hjemmel on {} oppgaver out of {}", oppgaverWithNewHjemmel.size, oppgaveList.size)
