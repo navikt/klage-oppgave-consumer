@@ -59,9 +59,10 @@ class OppgaveClient(
         }
 
     @Retryable
-    fun putOppgave(oppgave: Oppgave) =
-        logTimingAndWebClientResponseException("putOppgave") {
-            oppgaveWebClient.put()
+    fun putOppgave(oppgave: Oppgave): Oppgave {
+        return logTimingAndWebClientResponseException("putOppgave") {
+            securelogger.debug("Storing oppgave: {}", oppgave)
+            val storedOppgave = oppgaveWebClient.put()
                 .uri { uriBuilder ->
                     uriBuilder.pathSegment("{id}").build(oppgave.id)
                 }
@@ -72,7 +73,12 @@ class OppgaveClient(
                 .retrieve()
                 .bodyToMono<Oppgave>()
                 .block() ?: throw OppgaveClientException("Oppgave could not be put")
+
+            storedOppgave.also {
+                securelogger.debug("Stored oppgave: {}", this)
+            }
         }
+    }
 
     @Retryable
     fun getOppgave(oppgaveId: Long) =
