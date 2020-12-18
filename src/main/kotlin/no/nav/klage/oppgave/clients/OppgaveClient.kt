@@ -75,7 +75,7 @@ class OppgaveClient(
                 .block() ?: throw OppgaveClientException("Oppgave could not be put")
 
             storedOppgave.also {
-                securelogger.debug("Stored oppgave: {}", this)
+                securelogger.debug("Stored oppgave: {}", it)
             }
         }
     }
