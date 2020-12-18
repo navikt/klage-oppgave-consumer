@@ -42,8 +42,13 @@ class KafkaOppgaveConsumer(
                 logger.debug("Attempting to extract hjemler from beskrivelse")
 
                 if (oppgave.beskrivelse.isNullOrBlank()) {
-                    logger.debug("Beskrivelse was empty or null. Setting HJEMMEL to {}", MANGLER_HJEMMEL)
-                    oppgaveService.updateHjemmel(oppgave.id, MANGLER_HJEMMEL)
+                    logger.debug("Beskrivelse was empty or null")
+                    if (!oppgave.metadata?.get(HJEMMEL).isNullOrBlank()) {
+                        logger.debug("HJEMMEL is already set to {}", oppgave.metadata?.get(HJEMMEL))
+                    } else {
+                        logger.debug("Setting HJEMMEL to {}", MANGLER_HJEMMEL)
+                        oppgaveService.updateHjemmel(oppgave.id, MANGLER_HJEMMEL)
+                    }
                 } else {
                     val foundHjemler = hjemmelParsingService.extractHjemmel(oppgave.beskrivelse)
 
@@ -58,12 +63,13 @@ class KafkaOppgaveConsumer(
                         }
                     } else {
                         logger.debug("No hjemler found in beskrivelse. See more in secure log.")
-                        secureLogger.debug(
-                            "No hjemler found in beskrivelse. Setting HJEMMEL to {}. Beskrivelse: {}",
-                            MANGLER_HJEMMEL,
-                            oppgave.beskrivelse
-                        )
-                        oppgaveService.updateHjemmel(oppgave.id, MANGLER_HJEMMEL)
+                        secureLogger.debug("No hjemler found in beskrivelse. Beskrivelse: {}", oppgave.beskrivelse)
+                        if (!oppgave.metadata?.get(HJEMMEL).isNullOrBlank()) {
+                            logger.debug("HJEMMEL is already set to {}", oppgave.metadata?.get(HJEMMEL))
+                        } else {
+                            logger.debug("Setting HJEMMEL to {}", MANGLER_HJEMMEL)
+                            oppgaveService.updateHjemmel(oppgave.id, MANGLER_HJEMMEL)
+                        }
                     }
                 }
             }
