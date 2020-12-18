@@ -53,15 +53,15 @@ class OppgaveService(
     }
 
     fun updateHjemmel(oppgaveId: Long, hjemmel: String) {
-        logger.debug("DRY RUN -- Update hjemmel. OppgaveId: {}, hjemmel: {}", oppgaveId, hjemmel)
-//        val oppgave = oppgaveClient.getOppgave(oppgaveId)
-//        oppgaveClient.putOppgave(
-//            oppgave.copy(
-//                metadata = HashMap(oppgave.metadata).apply {
-//                    put(HJEMMEL, hjemmel)
-//                }
-//            )
-//        )
+        logger.debug("Update hjemmel. OppgaveId: {}, hjemmel: {}", oppgaveId, hjemmel)
+        val oppgave = oppgaveClient.getOppgave(oppgaveId)
+        oppgaveClient.putOppgave(
+            oppgave.copy(
+                metadata = HashMap(oppgave.metadata).apply {
+                    put(HJEMMEL, hjemmel)
+                }
+            )
+        )
     }
 
     private fun putOppgaver(oppgaverList: List<Oppgave>): Int {
