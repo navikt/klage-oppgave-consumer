@@ -59,8 +59,8 @@ class OppgaveClient(
         }
 
     @Retryable
-    fun putOppgave(oppgave: Oppgave): Oppgave {
-        return logTimingAndWebClientResponseException("putOppgave") {
+    fun putOppgave(oppgave: Oppgave) =
+        logTimingAndWebClientResponseException("putOppgave") {
             oppgaveWebClient.put()
                 .uri { uriBuilder ->
                     uriBuilder.pathSegment("{id}").build(oppgave.id)
@@ -73,7 +73,7 @@ class OppgaveClient(
                 .bodyToMono<Oppgave>()
                 .block() ?: throw OppgaveClientException("Oppgave could not be put")
         }
-    }
+
 
     @Retryable
     fun getOppgave(oppgaveId: Long) =
