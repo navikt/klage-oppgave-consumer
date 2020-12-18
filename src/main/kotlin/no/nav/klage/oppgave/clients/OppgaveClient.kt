@@ -74,7 +74,6 @@ class OppgaveClient(
                 .block() ?: throw OppgaveClientException("Oppgave could not be put")
         }
 
-
     @Retryable
     fun getOppgave(oppgaveId: Long) =
         logTimingAndWebClientResponseException("getOppgave") {
