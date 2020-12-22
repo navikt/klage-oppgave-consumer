@@ -69,7 +69,41 @@ internal class KafkaOppgaveConsumerTest {
     }
 
     @Test
-    fun `store MANGLER if beskrivelse is empty`() {
+    fun `don't store MANGLER when previously stored hjemmel has a value, but oppgave has beskrivelse`() {
+        val oppgaveServiceMock = mockk<OppgaveService>(relaxed = true)
+
+        val hjemmelParsingServiceMock = mockk<HjemmelParsingService>()
+        every { hjemmelParsingServiceMock.extractHjemmel(any()) } returns listOf()
+
+        val oppgaveRecordMock = mockk<ConsumerRecord<String, String>>()
+        every { oppgaveRecordMock.value() } returns getJsonWithHjemmelButBeskrivelseWithout()
+
+        val kafkaOppgaveConsumer = KafkaOppgaveConsumer(mockk(), hjemmelParsingServiceMock, oppgaveServiceMock)
+
+        kafkaOppgaveConsumer.listen(oppgaveRecordMock)
+
+        verify(exactly = 0) { oppgaveServiceMock.updateHjemmel(any(), any()) }
+    }
+
+    @Test
+    fun `don't store MANGLER when previously stored hjemmel has a value, but oppgave has no beskrivelse`() {
+        val oppgaveServiceMock = mockk<OppgaveService>(relaxed = true)
+
+        val hjemmelParsingServiceMock = mockk<HjemmelParsingService>()
+        every { hjemmelParsingServiceMock.extractHjemmel(any()) } returns listOf()
+
+        val oppgaveRecordMock = mockk<ConsumerRecord<String, String>>()
+        every { oppgaveRecordMock.value() } returns getJsonWithHjemmelButBeskrivelseIsEmpty()
+
+        val kafkaOppgaveConsumer = KafkaOppgaveConsumer(mockk(), hjemmelParsingServiceMock, oppgaveServiceMock)
+
+        kafkaOppgaveConsumer.listen(oppgaveRecordMock)
+
+        verify(exactly = 0) { oppgaveServiceMock.updateHjemmel(any(), any()) }
+    }
+
+    @Test
+    fun `store MANGLER if beskrivelse is empty and previous hjemmel is empty`() {
         val oppgaveServiceMock = mockk<OppgaveService>(relaxed = true)
 
         val hjemmelParsingServiceMock = mockk<HjemmelParsingService>()
@@ -87,7 +121,7 @@ internal class KafkaOppgaveConsumerTest {
     }
 
     @Test
-    fun `store MANGLER if beskrivelse or metadata does not contain hjemmel`() {
+    fun `store MANGLER if beskrivelse or metadata does not contain hjemmel and previous hjemmel is empty`() {
         val oppgaveServiceMock = mockk<OppgaveService>(relaxed = true)
 
         val hjemmelParsingServiceMock = mockk<HjemmelParsingService>()
@@ -170,6 +204,48 @@ internal class KafkaOppgaveConsumerTest {
           "someOtherField": "random",
           "metadata": {
             "HJEMMEL": "$hjemmelInMetadata"
+          }
+        }
+    """.trimIndent()
+
+    @Language("JSON")
+    fun getJsonWithHjemmelButBeskrivelseWithout() = """
+        {
+          "id": 301848147,
+          "tildeltEnhetsnr": "4291",
+          "endretAvEnhetsnr": "4291",
+          "opprettetAvEnhetsnr": "4418",
+          "journalpostId": "444997220",
+          "tilordnetRessurs": "Z994488",
+          "tema": "SYK",
+          "oppgavetype": "BEH_SAK_MK",
+          "behandlingstype": "ae0058",
+          "versjon": 25,
+          "beskrivelse": "---",
+          "someOtherField": "random",
+          "metadata": {
+            "HJEMMEL": "MANGLER"
+          }
+        }
+    """.trimIndent()
+
+    @Language("JSON")
+    fun getJsonWithHjemmelButBeskrivelseIsEmpty() = """
+        {
+          "id": 301848147,
+          "tildeltEnhetsnr": "4291",
+          "endretAvEnhetsnr": "4291",
+          "opprettetAvEnhetsnr": "4418",
+          "journalpostId": "444997220",
+          "tilordnetRessurs": "Z994488",
+          "tema": "SYK",
+          "oppgavetype": "BEH_SAK_MK",
+          "behandlingstype": "ae0058",
+          "versjon": 25,
+          "beskrivelse": "",
+          "someOtherField": "random",
+          "metadata": {
+            "HJEMMEL": "MANGLER"
           }
         }
     """.trimIndent()
