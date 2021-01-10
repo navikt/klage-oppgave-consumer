@@ -40,6 +40,10 @@ spec:
   secureLogs:
     enabled: true
   webproxy: true
+  accessPolicy:
+    outbound:
+      rules:
+        - application: klage-oppgave-api
   envFrom:
     - secret: srvklage-saksbeh
     - secret: oppgave-apikey

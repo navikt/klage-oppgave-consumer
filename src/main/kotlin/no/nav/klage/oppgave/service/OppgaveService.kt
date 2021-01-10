@@ -2,11 +2,9 @@ package no.nav.klage.oppgave.service
 
 import no.nav.klage.oppgave.clients.FETCH_LIMIT
 import no.nav.klage.oppgave.clients.HJEMMEL
+import no.nav.klage.oppgave.clients.KlageDittnavAPIClient
 import no.nav.klage.oppgave.clients.OppgaveClient
-import no.nav.klage.oppgave.domain.BatchUpdateRequest
-import no.nav.klage.oppgave.domain.BatchUpdateResponse
-import no.nav.klage.oppgave.domain.Oppgave
-import no.nav.klage.oppgave.domain.ResponseStatus
+import no.nav.klage.oppgave.domain.*
 import no.nav.klage.oppgave.utils.getLogger
 import org.springframework.stereotype.Service
 import java.time.LocalDate
@@ -16,6 +14,7 @@ import java.time.format.DateTimeFormatter
 @Service
 class OppgaveService(
     private val oppgaveClient: OppgaveClient,
+    private val oppgaveAPIClient: KlageDittnavAPIClient,
     private val hjemmelParsingService: HjemmelParsingService
 ) {
     companion object {
@@ -113,5 +112,9 @@ class OppgaveService(
                 }
             }
         }
+
+    fun storeLocalCopy(oppgave: OppgaveKafkaRecord) {
+        oppgaveAPIClient.storeOppgave(oppgave)
+    }
 
 }
