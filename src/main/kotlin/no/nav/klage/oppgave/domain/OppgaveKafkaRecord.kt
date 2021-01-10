@@ -70,4 +70,8 @@ data class OppgaveKafkaRecord(
     enum class Statuskategori {
         AAPEN, AVSLUTTET
     }
+
+    enum class Prioritet {
+        HOY, NORM, LAV
+    }
 }
