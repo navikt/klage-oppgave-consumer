@@ -4,6 +4,8 @@ val logstashVersion = "6.4"
 val springSleuthVersion = "2.2.6.RELEASE"
 val mockkVersion = "1.9.3"
 val springMockkVersion = "2.0.3"
+val tokenValidationVersion = "1.3.1"
+val oidcSupportVersion = "0.2.18"
 
 val githubUser: String by project
 val githubPassword: String by project
@@ -41,10 +43,15 @@ dependencies {
     implementation("ch.qos.logback:logback-classic")
     implementation("net.logstash.logback:logstash-logback-encoder:$logstashVersion")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 
     implementation("org.springframework.kafka:spring-kafka")
 
     implementation("no.nav.slackposter:simple-slack-poster:5")
+
+    implementation("no.nav.security:token-validation-spring:$tokenValidationVersion")
+    implementation("no.nav.security:token-client-spring:$tokenValidationVersion")
+    implementation("no.nav.security:oidc-spring-support:$oidcSupportVersion")
 
     testImplementation("io.mockk:mockk:$mockkVersion")
     testImplementation("com.ninja-squad:springmockk:$springMockkVersion")

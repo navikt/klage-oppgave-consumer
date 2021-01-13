@@ -33,6 +33,18 @@ management:
     tags:
       application: ${spring.application.name}
 
+no.nav.security.jwt:
+  client:
+    registration:
+      klage-oppgave-api:
+        token-endpoint-url: https://login.microsoftonline.com/${TENANT_ID}/oauth2/v2.0/token
+        grant-type: client_credentials
+        scope: api://${KLAGE-OPPGAVE-API_CLIENT-ID}/.default
+        authentication:
+          client-id: ${AZURE_APP_CLIENT_ID}
+          client-secret: ${AZURE_APP_CLIENT_SECRET}
+          client-auth-method: client_secret_basic
+
 KAFKA_BOOTSTRAP_SERVERS: localhost:9092
 KAFKA_GROUP_ID: klage-oppgave-consumer
 KAFKA_TOPIC: aapen-oppgave-endret-v1-preprod
@@ -46,3 +58,5 @@ navConsumerId: Nav-Consumer-Id
 SLACK_URL: http://localhost
 SLACK_CHANNEL_ID: 2
 NAIS_CLUSTER_NAME: rst
+
+KLAGE-OPPGAVE-API_SERVICE_URL: https://klage-oppgave-api

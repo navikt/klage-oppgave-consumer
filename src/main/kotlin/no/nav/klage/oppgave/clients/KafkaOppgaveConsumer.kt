@@ -1,5 +1,6 @@
 package no.nav.klage.oppgave.clients
 
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.klage.oppgave.domain.OppgaveKafkaRecord
 import no.nav.klage.oppgave.domain.OppgaveKafkaRecord.MetadataKey.HJEMMEL
@@ -26,7 +27,7 @@ class KafkaOppgaveConsumer(
 
         const val MANGLER_HJEMMEL = "MANGLER"
 
-        private val mapper = jacksonObjectMapper()
+        private val mapper = jacksonObjectMapper().registerModule(JavaTimeModule())
     }
 
     @KafkaListener(topics = ["\${KAFKA_TOPIC}"])
@@ -34,21 +35,19 @@ class KafkaOppgaveConsumer(
         runCatching {
             val oppgave = oppgaveRecord.value().toOppgave()
 
-            if (oppgave.isKlage() && oppgave.isTildeltKlageenhet()) {
+            if (oppgave.isKlage()) {
                 logger.debug("Changed klage-oppgave in enhet ${oppgave.tildeltEnhetsnr} received from Kafka topic")
 
                 oppgave.logIt()
+
+                //Store copy
+                oppgaveService.storeLocalCopy(oppgave)
 
                 logger.debug("Attempting to extract hjemler from beskrivelse")
 
                 if (oppgave.beskrivelse.isNullOrBlank()) {
                     logger.debug("Beskrivelse was empty or null")
-                    if (!oppgave.metadata?.get(HJEMMEL).isNullOrBlank()) {
-                        logger.debug("HJEMMEL is already set to {}", oppgave.metadata?.get(HJEMMEL))
-                    } else {
-                        logger.debug("Setting HJEMMEL to {}", MANGLER_HJEMMEL)
-                        oppgaveService.updateHjemmel(oppgave.id, MANGLER_HJEMMEL)
-                    }
+                    actOnHjemmel(oppgave)
                 } else {
                     val foundHjemler = hjemmelParsingService.extractHjemmel(oppgave.beskrivelse)
 
@@ -64,12 +63,7 @@ class KafkaOppgaveConsumer(
                     } else {
                         logger.debug("No hjemler found in beskrivelse. See more in secure log.")
                         secureLogger.debug("No hjemler found in beskrivelse. Beskrivelse: {}", oppgave.beskrivelse)
-                        if (!oppgave.metadata?.get(HJEMMEL).isNullOrBlank()) {
-                            logger.debug("HJEMMEL is already set to {}", oppgave.metadata?.get(HJEMMEL))
-                        } else {
-                            logger.debug("Setting HJEMMEL to {}", MANGLER_HJEMMEL)
-                            oppgaveService.updateHjemmel(oppgave.id, MANGLER_HJEMMEL)
-                        }
+                        actOnHjemmel(oppgave)
                     }
                 }
             }
@@ -77,6 +71,15 @@ class KafkaOppgaveConsumer(
 //            slackClient.postMessage("Nylig mottatt oppgave feilet! (${causeClass(rootCause(it))})", Severity.ERROR)
             secureLogger.error("Failed to process oppgave", it)
             throw RuntimeException("Could not process oppgave. See more details in secure log.")
+        }
+    }
+
+    private fun actOnHjemmel(oppgave: OppgaveKafkaRecord) {
+        if (!oppgave.metadata?.get(HJEMMEL).isNullOrBlank()) {
+            logger.debug("HJEMMEL is already set to {}", oppgave.metadata?.get(HJEMMEL))
+        } else {
+            logger.debug("Setting HJEMMEL to {}", MANGLER_HJEMMEL)
+            oppgaveService.updateHjemmel(oppgave.id, MANGLER_HJEMMEL)
         }
     }
 
