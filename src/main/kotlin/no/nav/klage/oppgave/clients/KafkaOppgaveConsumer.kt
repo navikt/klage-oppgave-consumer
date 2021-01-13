@@ -35,10 +35,13 @@ class KafkaOppgaveConsumer(
         runCatching {
             val oppgave = oppgaveRecord.value().toOppgave()
 
-            if (oppgave.isKlage() && oppgave.isTildeltKlageenhet()) {
+            if (oppgave.isKlage()) {
                 logger.debug("Changed klage-oppgave in enhet ${oppgave.tildeltEnhetsnr} received from Kafka topic")
 
                 oppgave.logIt()
+
+                //Store copy
+                oppgaveService.storeLocalCopy(oppgave)
 
                 logger.debug("Attempting to extract hjemler from beskrivelse")
 
@@ -56,8 +59,6 @@ class KafkaOppgaveConsumer(
                             oppgaveService.updateHjemmel(oppgave.id, foundHjemler.first())
                         } else {
                             logger.debug("No need to store hjemmel")
-                            //send to oppgave-api
-                            oppgaveService.storeLocalCopy(oppgave)
                         }
                     } else {
                         logger.debug("No hjemler found in beskrivelse. See more in secure log.")
@@ -76,7 +77,6 @@ class KafkaOppgaveConsumer(
     private fun actOnHjemmel(oppgave: OppgaveKafkaRecord) {
         if (!oppgave.metadata?.get(HJEMMEL).isNullOrBlank()) {
             logger.debug("HJEMMEL is already set to {}", oppgave.metadata?.get(HJEMMEL))
-            oppgaveService.storeLocalCopy(oppgave)
         } else {
             logger.debug("Setting HJEMMEL to {}", MANGLER_HJEMMEL)
             oppgaveService.updateHjemmel(oppgave.id, MANGLER_HJEMMEL)
