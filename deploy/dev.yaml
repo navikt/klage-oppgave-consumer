@@ -1,2 +1,3 @@
 springProfile: dev-gcp
 ingress: https://klage-oppgave-consumer.dev.nav.no
+tenant: trygdeetaten.no

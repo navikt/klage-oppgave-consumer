@@ -1,2 +1,3 @@
 springProfile: prod-gcp
 ingress: https://klage-oppgave-consumer.intern.nav.no
+tenant: nav.no
