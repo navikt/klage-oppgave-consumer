@@ -59,4 +59,4 @@ SLACK_URL: http://localhost
 SLACK_CHANNEL_ID: 2
 NAIS_CLUSTER_NAME: rst
 
-KLAGE-OPPGAVE-API_SERVICE_URL: https://klage-oppgave-api
+KLAGE-OPPGAVE-API_SERVICE_URL: http://klage-oppgave-api

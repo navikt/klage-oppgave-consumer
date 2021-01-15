@@ -42,8 +42,8 @@ class KafkaConfiguration(
         factory.consumerFactory = consumerFactory()
 
         factory.setErrorHandler { thrownException, data ->
-            logger.error("Could not deserialize record. See secure logs for details.")
-            secureLogger.error("Could not deserialize record: $data", thrownException)
+            logger.error("There was a problem during processing of the record. See secure logs for details.")
+            secureLogger.error("There was a problem during processing of the record: $data", thrownException)
         }
 
         return factory;
