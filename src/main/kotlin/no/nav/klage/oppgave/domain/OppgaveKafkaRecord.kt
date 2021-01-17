@@ -1,9 +1,7 @@
 package no.nav.klage.oppgave.domain
 
-import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import java.time.LocalDate
-import java.time.LocalDateTime
 
 const val BEHANDLINGSTYPE_KLAGE = "ae0058"
 const val KLAGEENHET_PREFIX = "42"
@@ -31,12 +29,9 @@ data class OppgaveKafkaRecord(
     val aktivDato: LocalDate,
     val opprettetAv: String,
     val endretAv: String? = null,
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
-    val opprettetTidspunkt: LocalDateTime,
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
-    val endretTidspunkt: LocalDateTime? = null,
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
-    val ferdigstiltTidspunkt: LocalDateTime? = null,
+    val opprettetTidspunkt: String,
+    val endretTidspunkt: String? = null,
+    val ferdigstiltTidspunkt: String? = null,
     val behandlesAvApplikasjon: String? = null,
     val journalpostkilde: String? = null,
     val ident: Ident? = null,
