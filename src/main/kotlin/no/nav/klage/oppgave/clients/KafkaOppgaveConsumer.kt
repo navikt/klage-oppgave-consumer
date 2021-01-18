@@ -41,7 +41,8 @@ class KafkaOppgaveConsumer(
                 oppgave.logIt()
 
                 //Store copy
-                oppgaveService.storeLocalCopy(oppgave)
+                //TODO: uncomment when it works in klage-oppgave-api
+//                oppgaveService.storeLocalCopy(oppgave)
 
                 logger.debug("Attempting to extract hjemler from beskrivelse")
 
