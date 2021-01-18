@@ -6,12 +6,14 @@ import no.nav.klage.oppgave.domain.ResponseStatus
 import no.nav.klage.oppgave.exceptions.OppgaveClientException
 import no.nav.klage.oppgave.service.OppgaveService
 import no.nav.klage.oppgave.utils.getLogger
+import no.nav.security.token.support.core.api.Unprotected
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.context.request.WebRequest
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 @RestController
+@Unprotected
 class BatchUpdateController(
     private val oppgaveService: OppgaveService
 ) {
