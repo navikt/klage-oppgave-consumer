@@ -47,7 +47,7 @@ class OppgaveService(
         return BatchUpdateResponse(
             finished = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME),
             status = status,
-            message = "$oppgaverSuccessfullyPut stored out of ${oppgaveList.size}"
+            message = "$oppgaverSuccessfullyPut stored out of ${oppgaveList.size} with ${oppgaverWithNewHjemmel.size} new hjemler"
         )
     }
 
