@@ -45,6 +45,7 @@ class OppgaveClient(
                     uriBuilder.queryParam("limit", limit)
                     uriBuilder.queryParam("offset", offset)
                     uriBuilder.queryParam("behandlingstype", BEHANDLINGSTYPE_KLAGE)
+                    uriBuilder.queryParam("tema", "SYK")
                     includeFrom?.let {
                         uriBuilder.queryParam("fristFom", DateTimeFormatter.ISO_LOCAL_DATE.format(it))
                     }
