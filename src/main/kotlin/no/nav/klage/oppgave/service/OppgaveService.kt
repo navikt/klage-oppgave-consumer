@@ -92,9 +92,9 @@ class OppgaveService(
             oppgaveResponse = oppgaveClient.fetchOppgaver(includeFrom, offset)
         }
 
-        return alleOppgaver.filter {
+        return alleOppgaver/*.filter {
             it.metadata?.get(HJEMMEL) == null
-        }
+        }*/
     }
 
     private fun setHjemmel(oppgaver: List<Oppgave>): List<Oppgave> =
