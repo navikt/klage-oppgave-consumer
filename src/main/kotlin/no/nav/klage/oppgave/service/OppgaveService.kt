@@ -6,6 +6,7 @@ import no.nav.klage.oppgave.clients.KlageDittnavAPIClient
 import no.nav.klage.oppgave.clients.OppgaveClient
 import no.nav.klage.oppgave.domain.*
 import no.nav.klage.oppgave.utils.getLogger
+import no.nav.klage.oppgave.utils.getSecureLogger
 import org.springframework.stereotype.Service
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -20,6 +21,7 @@ class OppgaveService(
     companion object {
         @Suppress("JAVA_CLASS_ON_COMPANION")
         private val logger = getLogger(javaClass.enclosingClass)
+        private val secureLogger = getSecureLogger()
     }
 
     fun bulkUpdateHjemmel(request: BatchUpdateRequest): BatchUpdateResponse {
@@ -108,7 +110,7 @@ class OppgaveService(
                         put(HJEMMEL, possibleHjemmel.first())
                     }
                 ).also {
-                    logger.debug("Extracted hjemmel {} from beskrivelse {}", possibleHjemmel.first(), oppg.beskrivelse)
+                    secureLogger.debug("Extracted hjemmel {} from beskrivelse {}", possibleHjemmel.first(), oppg.beskrivelse)
                 }
             }
         }
