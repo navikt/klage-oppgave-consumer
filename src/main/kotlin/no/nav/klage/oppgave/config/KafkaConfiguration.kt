@@ -16,6 +16,7 @@ import org.springframework.kafka.core.ConsumerFactory
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory
 import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
 import java.io.File
+import java.time.Duration
 
 
 @Configuration
@@ -44,6 +45,11 @@ class KafkaConfiguration(
         factory.setErrorHandler { thrownException, data ->
             logger.error("There was a problem during processing of the record. See secure logs for details.")
             secureLogger.error("There was a problem during processing of the record: $data", thrownException)
+        }
+
+        //Retry consumer/listener even if authorization fails
+        factory.setContainerCustomizer { container ->
+            container.containerProperties.authorizationExceptionRetryInterval = Duration.ofSeconds(10L)
         }
 
         return factory;
