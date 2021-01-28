@@ -9,3 +9,7 @@ data class BatchUpdateResponse(
 enum class ResponseStatus {
     OK, PARTIAL, ERROR
 }
+
+data class BatchStoreResponse(
+    val message: String
+)

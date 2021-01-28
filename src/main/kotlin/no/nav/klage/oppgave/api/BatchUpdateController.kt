@@ -1,7 +1,6 @@
 package no.nav.klage.oppgave.api
 
-import no.nav.klage.oppgave.domain.BatchUpdateRequest
-import no.nav.klage.oppgave.domain.BatchUpdateResponse
+import no.nav.klage.oppgave.domain.*
 import no.nav.klage.oppgave.domain.ResponseStatus
 import no.nav.klage.oppgave.exceptions.OppgaveClientException
 import no.nav.klage.oppgave.service.OppgaveService
@@ -26,6 +25,12 @@ class BatchUpdateController(
     fun triggerBatchUpdate(@RequestBody request: BatchUpdateRequest): BatchUpdateResponse {
         logger.info("Triggered batchUpdate with dryRun = {}", request.dryRun)
         return oppgaveService.bulkUpdateHjemmel(request)
+    }
+
+    @PostMapping("/batchstore")
+    fun triggerBatchStore(@RequestBody request: BatchStoreRequest): BatchStoreResponse {
+        logger.info("Triggered batchstore with dryRun = {}", request.dryRun)
+        return oppgaveService.batchStore(request)
     }
 
 }

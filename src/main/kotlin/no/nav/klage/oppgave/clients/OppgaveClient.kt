@@ -61,6 +61,28 @@ class OppgaveClient(
         }
 
     @Retryable
+    fun fetchAllKlageOppgaverForSYKBasedOnDate(includeFrom: LocalDate?, offset: Int, limit: Int = FETCH_LIMIT) =
+        logTimingAndWebClientResponseException("getOppgaver ($offset)") {
+            oppgaveWebClient.get()
+                .uri { uriBuilder ->
+                    uriBuilder.queryParam("statuskategori", Statuskategori.AAPEN)
+                    uriBuilder.queryParam("limit", limit)
+                    uriBuilder.queryParam("offset", offset)
+                    uriBuilder.queryParam("behandlingstype", BEHANDLINGSTYPE_KLAGE)
+                    uriBuilder.queryParam("tema", "SYK")
+                    includeFrom?.let {
+                        uriBuilder.queryParam("fristFom", DateTimeFormatter.ISO_LOCAL_DATE.format(it))
+                    }
+                    uriBuilder.build()
+                }
+                .header("X-Correlation-ID", tracer.currentSpan().context().traceIdString())
+                .header("Nav-Consumer-Id", applicationName)
+                .retrieve()
+                .bodyToMono<OppgaveResponse>()
+                .block() ?: throw OppgaveClientException("Oppgaver could not be fetched")
+        }
+
+    @Retryable
     fun putOppgave(oppgave: Oppgave) =
         logTimingAndWebClientResponseException("putOppgave") {
             oppgaveWebClient.put()
