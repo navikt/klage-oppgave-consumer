@@ -37,17 +37,29 @@ class OppgaveClient(
     }
 
     @Retryable
-    fun fetchOppgaver(includeFrom: LocalDate?, offset: Int, limit: Int = FETCH_LIMIT) =
+    fun fetchOppgaver(
+        includeFrom: LocalDate?,
+        tildeltEnhetsnr: String? = null,
+        tema: String? = null,
+        behandlingstype: String? = null,
+        offset: Int,
+        limit: Int = FETCH_LIMIT
+    ) =
         logTimingAndWebClientResponseException("getOppgaver ($offset)") {
             oppgaveWebClient.get()
                 .uri { uriBuilder ->
                     uriBuilder.queryParam("statuskategori", Statuskategori.AAPEN)
                     uriBuilder.queryParam("limit", limit)
                     uriBuilder.queryParam("offset", offset)
-                    uriBuilder.queryParam("behandlingstype", BEHANDLINGSTYPE_KLAGE)
-                    uriBuilder.queryParam("tema", "SYK")
-                    uriBuilder.queryParam("tildeltEnhetsnr", "4291")
-                    uriBuilder.queryParam("tildeltRessurs", "false")
+                    behandlingstype?.let {
+                        uriBuilder.queryParam("behandlingstype", it)
+                    }
+                    tema?.let {
+                        uriBuilder.queryParam("tema", it)
+                    }
+                    tildeltEnhetsnr?.let {
+                        uriBuilder.queryParam("tildeltEnhetsnr", it)
+                    }
                     includeFrom?.let {
                         uriBuilder.queryParam("fristFom", DateTimeFormatter.ISO_LOCAL_DATE.format(it))
                     }

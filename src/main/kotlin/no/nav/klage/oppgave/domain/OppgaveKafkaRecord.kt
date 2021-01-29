@@ -13,7 +13,7 @@ data class OppgaveKafkaRecord(
     val saksreferanse: String? = null,
     val mappeId: Long? = null,
     val status: Status,
-    val statuskategori: Statuskategori,
+    val statuskategori: Statuskategori? = null,
     val tildeltEnhetsnr: String,
     val opprettetAvEnhetsnr: String? = null,
     val endretAvEnhetsnr: String? = null,
