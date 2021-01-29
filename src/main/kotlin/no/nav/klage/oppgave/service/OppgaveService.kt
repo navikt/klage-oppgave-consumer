@@ -28,7 +28,14 @@ class OppgaveService(
         val oppgaveList = if (request.oppgaveId != null) {
             listOf(oppgaveClient.getOppgave(request.oppgaveId))
         } else {
-            fetchOppgaverWithoutHjemmel(request.includeFrom)
+            fetchOppgaver(
+                request.includeFrom,
+                tema = "SYK",
+                behandlingstype = BEHANDLINGSTYPE_KLAGE,
+                tildeltEnhetsnr = "4291"
+            ).filter {
+                it.metadata?.get(HJEMMEL) == null
+            }
         }
 
         val oppgaverWithNewHjemmel = setHjemmel(oppgaveList)
@@ -81,35 +88,34 @@ class OppgaveService(
         return oppgaverSuccessfullyPut
     }
 
-    private fun fetchOppgaverWithoutHjemmel(includeFrom: LocalDate?): List<Oppgave> {
+    private fun fetchOppgaver(
+        includeFrom: LocalDate?,
+        tema: String? = null,
+        behandlingstype: String? = null,
+        tildeltEnhetsnr: String? = null
+    ): List<Oppgave> {
         var offset = 0
 
-        var oppgaveResponse = oppgaveClient.fetchOppgaver(includeFrom, offset)
+        var oppgaveResponse = oppgaveClient.fetchOppgaver(
+            includeFrom = includeFrom,
+            tema = tema,
+            behandlingstype = behandlingstype,
+            tildeltEnhetsnr = tildeltEnhetsnr,
+            offset = offset
+        )
 
         val alleOppgaver = mutableListOf<Oppgave>()
 
         while (oppgaveResponse.oppgaver.isNotEmpty()) {
             alleOppgaver += oppgaveResponse.oppgaver
             offset += FETCH_LIMIT
-            oppgaveResponse = oppgaveClient.fetchOppgaver(includeFrom, offset)
-        }
-
-        return alleOppgaver.filter {
-            it.metadata?.get(HJEMMEL) == null
-        }
-    }
-
-    private fun fetchOppgaverWithKlage(includeFrom: LocalDate?): List<Oppgave> {
-        var offset = 0
-
-        var oppgaveResponse = oppgaveClient.fetchAllKlageOppgaverForSYKBasedOnDate(includeFrom, offset)
-
-        val alleOppgaver = mutableListOf<Oppgave>()
-
-        while (oppgaveResponse.oppgaver.isNotEmpty()) {
-            alleOppgaver += oppgaveResponse.oppgaver
-            offset += FETCH_LIMIT
-            oppgaveResponse = oppgaveClient.fetchAllKlageOppgaverForSYKBasedOnDate(includeFrom, offset)
+            oppgaveResponse = oppgaveClient.fetchOppgaver(
+                includeFrom = includeFrom,
+                tema = tema,
+                behandlingstype = behandlingstype,
+                tildeltEnhetsnr = tildeltEnhetsnr,
+                offset = offset
+            )
         }
 
         return alleOppgaver
@@ -140,7 +146,12 @@ class OppgaveService(
     }
 
     fun batchStore(batchStoreRequest: BatchStoreRequest): BatchStoreResponse {
-        val oppgaver = fetchOppgaverWithKlage(batchStoreRequest.includeFrom)
+        val oppgaver = fetchOppgaver(
+            includeFrom = batchStoreRequest.includeFrom,
+            tema = batchStoreRequest.tema,
+            behandlingstype = batchStoreRequest.behandlingstype,
+            tildeltEnhetsnr = batchStoreRequest.tildeltEnhetsnr
+        )
 
         var countOK = 0
 

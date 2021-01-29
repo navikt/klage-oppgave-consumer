@@ -10,5 +10,8 @@ data class BatchUpdateRequest(
 
 data class BatchStoreRequest(
     val dryRun: Boolean,
-    val includeFrom: LocalDate?
+    val includeFrom: LocalDate?,
+    val tema: String?,
+    val behandlingstype: String?,
+    val tildeltEnhetsnr: String?
 )
