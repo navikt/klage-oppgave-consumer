@@ -51,6 +51,8 @@ class OppgaveClient(
                     uriBuilder.queryParam("statuskategori", Statuskategori.AAPEN)
                     uriBuilder.queryParam("limit", limit)
                     uriBuilder.queryParam("offset", offset)
+                    uriBuilder.queryParam("oppgavetype", "BEH_SAK_MK")
+                    uriBuilder.queryParam("oppgavetype", "BEH_SAK")
                     behandlingstype?.let {
                         uriBuilder.queryParam("behandlingstype", it)
                     }
