@@ -35,7 +35,7 @@ class KafkaOppgaveConsumer(
         runCatching {
             val oppgave = oppgaveRecord.value().toOppgave()
 
-            if (oppgave.isKlage()) {
+            if (oppgave.isKlage() && oppgave.isAapen()) {
                 logger.debug("Changed klage-oppgave in enhet ${oppgave.tildeltEnhetsnr} received from Kafka topic")
 
                 oppgave.logIt()

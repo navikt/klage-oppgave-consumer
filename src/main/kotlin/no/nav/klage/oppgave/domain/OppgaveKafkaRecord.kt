@@ -39,6 +39,7 @@ data class OppgaveKafkaRecord(
 ) {
 
     fun isKlage() = behandlingstype == BEHANDLINGSTYPE_KLAGE
+    fun isAapen() = statuskategori == Statuskategori.AAPEN
     fun isTildeltKlageenhet() = tildeltEnhetsnr.startsWith(KLAGEENHET_PREFIX)
 
     enum class MetadataKey {
