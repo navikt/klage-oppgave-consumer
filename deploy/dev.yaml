@@ -1,3 +1,7 @@
 springProfile: dev-gcp
 ingress: https://klage-oppgave-consumer.dev.nav.no
 tenant: trygdeetaten.no
+
+db_tier: db-custom-1-3840
+db_size: 10
+db_ha: true
