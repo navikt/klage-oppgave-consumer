@@ -6,6 +6,7 @@ val mockkVersion = "1.9.3"
 val springMockkVersion = "2.0.3"
 val tokenValidationVersion = "1.3.1"
 val oidcSupportVersion = "0.2.18"
+val h2Version = "1.4.200"
 
 val githubUser: String by project
 val githubPassword: String by project
@@ -26,6 +27,7 @@ plugins {
     id("org.jetbrains.kotlin.jvm") version "1.4.10"
     id("org.springframework.boot") version "2.3.6.RELEASE"
     id("org.jetbrains.kotlin.plugin.spring") version "1.4.10"
+    id("org.jetbrains.kotlin.plugin.jpa") version "1.4.10"
     idea
 }
 
@@ -38,7 +40,13 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-webflux")
+    implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.cloud:spring-cloud-starter-sleuth:$springSleuthVersion")
+
+    implementation("org.flywaydb:flyway-core")
+    implementation("com.zaxxer:HikariCP")
+    implementation("org.postgresql:postgresql")
 
     implementation("io.micrometer:micrometer-registry-prometheus")
     implementation("ch.qos.logback:logback-classic")
@@ -54,6 +62,7 @@ dependencies {
     implementation("no.nav.security:token-client-spring:$tokenValidationVersion")
     implementation("no.nav.security:oidc-spring-support:$oidcSupportVersion")
 
+    testImplementation("com.h2database:h2:$h2Version")
     testImplementation("io.mockk:mockk:$mockkVersion")
     testImplementation("com.ninja-squad:springmockk:$springMockkVersion")
 
