@@ -3,3 +3,7 @@ OPPGAVE_URL: https://api-gw-q1.oera.no/oppgave/api/v1/oppgaver
 TENANT_ID: 966ac572-f5b7-4bbe-aa88-c76419c0f851
 
 KLAGE-OPPGAVE-API_CLIENT-ID: 0bc199ef-35dd-4aa3-87e6-01506da3dd90
+
+db_tier: db-custom-1-3840
+db_size: 10
+db_ha: true
