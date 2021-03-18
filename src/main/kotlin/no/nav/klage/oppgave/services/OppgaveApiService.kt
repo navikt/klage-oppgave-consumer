@@ -1,8 +1,7 @@
-package no.nav.klage.oppgave.service
+package no.nav.klage.oppgave.services
 
 import no.nav.klage.oppgave.clients.FETCH_LIMIT
 import no.nav.klage.oppgave.clients.HJEMMEL
-import no.nav.klage.oppgave.clients.KlageDittnavAPIClient
 import no.nav.klage.oppgave.clients.OppgaveClient
 import no.nav.klage.oppgave.domain.*
 import no.nav.klage.oppgave.utils.getLogger
@@ -13,9 +12,8 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 @Service
-class OppgaveService(
+class OppgaveApiService(
     private val oppgaveClient: OppgaveClient,
-    private val oppgaveAPIClient: KlageDittnavAPIClient,
     private val hjemmelParsingService: HjemmelParsingService
 ) {
     companion object {
@@ -72,7 +70,7 @@ class OppgaveService(
         )
     }
 
-    private fun putOppgaver(oppgaverList: List<Oppgave>): Int {
+    private fun putOppgaver(oppgaverList: List<OppgaveApiRecord>): Int {
         var oppgaverSuccessfullyPut = 0
 
         oppgaverList.forEach { oppg ->
@@ -88,12 +86,12 @@ class OppgaveService(
         return oppgaverSuccessfullyPut
     }
 
-    private fun fetchOppgaver(
+    fun fetchOppgaver(
         includeFrom: LocalDate?,
         tema: String? = null,
         behandlingstype: String? = null,
         tildeltEnhetsnr: String? = null
-    ): List<Oppgave> {
+    ): List<OppgaveApiRecord> {
         var offset = 0
 
         var oppgaveResponse = oppgaveClient.fetchOppgaver(
@@ -104,7 +102,7 @@ class OppgaveService(
             offset = offset
         )
 
-        val alleOppgaver = mutableListOf<Oppgave>()
+        val alleOppgaver = mutableListOf<OppgaveApiRecord>()
 
         while (oppgaveResponse.oppgaver.isNotEmpty()) {
             alleOppgaver += oppgaveResponse.oppgaver
@@ -121,7 +119,7 @@ class OppgaveService(
         return alleOppgaver
     }
 
-    private fun setHjemmel(oppgaver: List<Oppgave>): List<Oppgave> =
+    private fun setHjemmel(oppgaver: List<OppgaveApiRecord>): List<OppgaveApiRecord> =
         oppgaver.mapNotNull { oppg ->
             val possibleHjemmel = hjemmelParsingService.extractHjemmel(oppg.beskrivelse ?: "")
             if (possibleHjemmel.isEmpty()) {
@@ -140,94 +138,5 @@ class OppgaveService(
                 }
             }
         }
-
-    fun storeLocalCopy(oppgave: OppgaveKafkaRecord) {
-        oppgaveAPIClient.storeOppgave(oppgave)
-    }
-
-    fun batchStore(batchStoreRequest: BatchStoreRequest): BatchStoreResponse {
-        val oppgaver = fetchOppgaver(
-            includeFrom = batchStoreRequest.includeFrom,
-            tema = batchStoreRequest.tema,
-            behandlingstype = batchStoreRequest.behandlingstype,
-            tildeltEnhetsnr = batchStoreRequest.tildeltEnhetsnr
-        )
-
-        var countOK = 0
-
-        if (!batchStoreRequest.dryRun) {
-            oppgaver.forEach { oppgave ->
-                runCatching {
-                    oppgaveAPIClient.storeOppgave(toOppgaveKafkaRecord(oppgave))
-                    countOK++
-                }.onFailure { throwable ->
-                    logger.debug("Failed to store oppgave with id {}. See more in secure log", oppgave.id)
-                    secureLogger.warn("Failed to store oppgave $oppgave", throwable)
-                }
-            }
-        }
-
-        val message = "Found ${oppgaver.size} oppgaver and managed to store $countOK"
-        logger.debug(message)
-
-        return BatchStoreResponse(message)
-    }
-
-    private fun toOppgaveKafkaRecord(oppgave: Oppgave): OppgaveKafkaRecord {
-        return OppgaveKafkaRecord(
-            id = oppgave.id,
-            versjon = oppgave.versjon,
-            journalpostId = oppgave.journalpostId,
-            saksreferanse = oppgave.saksreferanse,
-            mappeId = oppgave.mappeId,
-            status = OppgaveKafkaRecord.Status.valueOf(
-                oppgave.status?.name ?: throw RuntimeException("missing status")
-            ),
-            tildeltEnhetsnr = oppgave.tildeltEnhetsnr ?: "missing",
-            opprettetAvEnhetsnr = oppgave.opprettetAvEnhetsnr,
-            endretAvEnhetsnr = oppgave.endretAvEnhetsnr,
-            tema = oppgave.tema,
-            temagruppe = oppgave.temagruppe,
-            behandlingstema = oppgave.behandlingstema,
-            oppgavetype = oppgave.oppgavetype ?: "missing",
-            behandlingstype = oppgave.behandlingstype,
-            prioritet = OppgaveKafkaRecord.Prioritet.valueOf(
-                oppgave.prioritet?.name ?: throw RuntimeException("missing prioritet")
-            ),
-            tilordnetRessurs = oppgave.tilordnetRessurs,
-            beskrivelse = oppgave.beskrivelse,
-            fristFerdigstillelse = oppgave.fristFerdigstillelse,
-            aktivDato = LocalDate.parse(oppgave.aktivDato),
-            opprettetAv = oppgave.opprettetAv ?: "missing opprettetAv",
-            endretAv = oppgave.endretAv,
-            opprettetTidspunkt = oppgave.opprettetTidspunkt ?: throw RuntimeException("missing opprettetTidspunkt"),
-            endretTidspunkt = oppgave.endretTidspunkt,
-            ferdigstiltTidspunkt = oppgave.ferdigstiltTidspunkt,
-            behandlesAvApplikasjon = oppgave.behandlesAvApplikasjon,
-            journalpostkilde = oppgave.journalpostkilde,
-            ident = getIdent(oppgave.identer),
-            metadata = toMetadata(oppgave.metadata)
-        )
-    }
-
-    private fun toMetadata(metadata: Map<String, String>?): Map<OppgaveKafkaRecord.MetadataKey, String>? {
-        return metadata?.map { (k, v) ->
-            OppgaveKafkaRecord.MetadataKey.valueOf(k) to v
-        }?.toMap()
-    }
-
-    private fun getIdent(identer: List<Ident>?): OppgaveKafkaRecord.Ident {
-        if (identer != null) {
-            val folkeregisterIdent = identer.find { it.gruppe == Gruppe.FOLKEREGISTERIDENT }
-            val aktoerIdIdent = identer.find { it.gruppe == Gruppe.AKTOERID }
-            return OppgaveKafkaRecord.Ident(
-                identType = OppgaveKafkaRecord.IdentType.AKTOERID,
-                verdi = aktoerIdIdent?.ident ?: "missing aktoerId",
-                folkeregisterident = folkeregisterIdent?.ident
-            )
-        }
-
-        throw RuntimeException("missing ident")
-    }
 
 }

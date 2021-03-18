@@ -7,8 +7,9 @@ import io.mockk.mockk
 import io.mockk.verify
 import no.nav.klage.oppgave.clients.KafkaOppgaveConsumer.Companion.MANGLER_HJEMMEL
 import no.nav.klage.oppgave.domain.OppgaveKafkaRecord
-import no.nav.klage.oppgave.service.HjemmelParsingService
-import no.nav.klage.oppgave.service.OppgaveService
+import no.nav.klage.oppgave.facades.OppgaveFacade
+import no.nav.klage.oppgave.services.HjemmelParsingService
+import no.nav.klage.oppgave.services.OppgaveApiService
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Test
@@ -17,7 +18,7 @@ internal class KafkaOppgaveConsumerTest {
 
     @Test
     fun `store found hjemmel when there is no previous hjemmel`() {
-        val oppgaveServiceMock = mockk<OppgaveService>(relaxed = true)
+        val oppgaveFacade = mockk<OppgaveFacade>(relaxed = true)
 
         val hjemmelParsingServiceMock = mockk<HjemmelParsingService>()
         every { hjemmelParsingServiceMock.extractHjemmel(any()) } returns listOf("8-14")
@@ -25,16 +26,17 @@ internal class KafkaOppgaveConsumerTest {
         val oppgaveRecordMock = mockk<ConsumerRecord<String, String>>()
         every { oppgaveRecordMock.value() } returns getJsonWithHjemmelInBeskrivelse()
 
-        val kafkaOppgaveConsumer = KafkaOppgaveConsumer(mockk(), hjemmelParsingServiceMock, oppgaveServiceMock)
+        val kafkaOppgaveConsumer =
+            KafkaOppgaveConsumer(mockk(), hjemmelParsingServiceMock, oppgaveFacade)
 
         kafkaOppgaveConsumer.listen(oppgaveRecordMock)
 
-        verify { oppgaveServiceMock.updateHjemmel(any(), any()) }
+        verify { oppgaveFacade.updateHjemmel(any(), any()) }
     }
 
     @Test
     fun `store found hjemmel when there is a previous different hjemmel`() {
-        val oppgaveServiceMock = mockk<OppgaveService>(relaxed = true)
+        val oppgaveFacade = mockk<OppgaveFacade>(relaxed = true)
 
         val hjemmelParsingServiceMock = mockk<HjemmelParsingService>()
         every { hjemmelParsingServiceMock.extractHjemmel(any()) } returns listOf("22-19")
@@ -44,16 +46,17 @@ internal class KafkaOppgaveConsumerTest {
             hjemmelInMetadata = "8-14"
         )
 
-        val kafkaOppgaveConsumer = KafkaOppgaveConsumer(mockk(), hjemmelParsingServiceMock, oppgaveServiceMock)
+        val kafkaOppgaveConsumer =
+            KafkaOppgaveConsumer(mockk(), hjemmelParsingServiceMock, oppgaveFacade)
 
         kafkaOppgaveConsumer.listen(oppgaveRecordMock)
 
-        verify { oppgaveServiceMock.updateHjemmel(any(), any()) }
+        verify { oppgaveFacade.updateHjemmel(any(), any()) }
     }
 
     @Test
     fun `don't store found hjemmel when previously stored hjemmel is equal`() {
-        val oppgaveServiceMock = mockk<OppgaveService>(relaxed = true)
+        val oppgaveFacade = mockk<OppgaveFacade>(relaxed = true)
 
         val hjemmelParsingServiceMock = mockk<HjemmelParsingService>()
         val hjemmel = "8-14"
@@ -64,16 +67,17 @@ internal class KafkaOppgaveConsumerTest {
             hjemmelInMetadata = hjemmel
         )
 
-        val kafkaOppgaveConsumer = KafkaOppgaveConsumer(mockk(), hjemmelParsingServiceMock, oppgaveServiceMock)
+        val kafkaOppgaveConsumer =
+            KafkaOppgaveConsumer(mockk(), hjemmelParsingServiceMock, oppgaveFacade)
 
         kafkaOppgaveConsumer.listen(oppgaveRecordMock)
 
-        verify(exactly = 0) { oppgaveServiceMock.updateHjemmel(any(), any()) }
+        verify(exactly = 0) { oppgaveFacade.updateHjemmel(any(), any()) }
     }
 
     @Test
     fun `don't store MANGLER when previously stored hjemmel has a value, but oppgave has beskrivelse`() {
-        val oppgaveServiceMock = mockk<OppgaveService>(relaxed = true)
+        val oppgaveFacade = mockk<OppgaveFacade>(relaxed = true)
 
         val hjemmelParsingServiceMock = mockk<HjemmelParsingService>()
         every { hjemmelParsingServiceMock.extractHjemmel(any()) } returns listOf()
@@ -81,16 +85,17 @@ internal class KafkaOppgaveConsumerTest {
         val oppgaveRecordMock = mockk<ConsumerRecord<String, String>>()
         every { oppgaveRecordMock.value() } returns getJsonWithHjemmelButBeskrivelseWithout()
 
-        val kafkaOppgaveConsumer = KafkaOppgaveConsumer(mockk(), hjemmelParsingServiceMock, oppgaveServiceMock)
+        val kafkaOppgaveConsumer =
+            KafkaOppgaveConsumer(mockk(), hjemmelParsingServiceMock, oppgaveFacade)
 
         kafkaOppgaveConsumer.listen(oppgaveRecordMock)
 
-        verify(exactly = 0) { oppgaveServiceMock.updateHjemmel(any(), any()) }
+        verify(exactly = 0) { oppgaveFacade.updateHjemmel(any(), any()) }
     }
 
     @Test
     fun `don't store MANGLER when previously stored hjemmel has a value, but oppgave has no beskrivelse`() {
-        val oppgaveServiceMock = mockk<OppgaveService>(relaxed = true)
+        val oppgaveFacade = mockk<OppgaveFacade>(relaxed = true)
 
         val hjemmelParsingServiceMock = mockk<HjemmelParsingService>()
         every { hjemmelParsingServiceMock.extractHjemmel(any()) } returns listOf()
@@ -98,16 +103,17 @@ internal class KafkaOppgaveConsumerTest {
         val oppgaveRecordMock = mockk<ConsumerRecord<String, String>>()
         every { oppgaveRecordMock.value() } returns getJsonWithHjemmelButBeskrivelseIsEmpty()
 
-        val kafkaOppgaveConsumer = KafkaOppgaveConsumer(mockk(), hjemmelParsingServiceMock, oppgaveServiceMock)
+        val kafkaOppgaveConsumer =
+            KafkaOppgaveConsumer(mockk(), hjemmelParsingServiceMock, oppgaveFacade)
 
         kafkaOppgaveConsumer.listen(oppgaveRecordMock)
 
-        verify(exactly = 0) { oppgaveServiceMock.updateHjemmel(any(), any()) }
+        verify(exactly = 0) { oppgaveFacade.updateHjemmel(any(), any()) }
     }
 
     @Test
     fun `store MANGLER if beskrivelse is empty and previous hjemmel is empty`() {
-        val oppgaveServiceMock = mockk<OppgaveService>(relaxed = true)
+        val oppgaveFacade = mockk<OppgaveFacade>(relaxed = true)
 
         val hjemmelParsingServiceMock = mockk<HjemmelParsingService>()
         val hjemmel = "8-14"
@@ -116,16 +122,17 @@ internal class KafkaOppgaveConsumerTest {
         val oppgaveRecordMock = mockk<ConsumerRecord<String, String>>()
         every { oppgaveRecordMock.value() } returns getJsonWithoutBeskrivelse()
 
-        val kafkaOppgaveConsumer = KafkaOppgaveConsumer(mockk(), hjemmelParsingServiceMock, oppgaveServiceMock)
+        val kafkaOppgaveConsumer =
+            KafkaOppgaveConsumer(mockk(), hjemmelParsingServiceMock, oppgaveFacade)
 
         kafkaOppgaveConsumer.listen(oppgaveRecordMock)
 
-        verify { oppgaveServiceMock.updateHjemmel(any(), MANGLER_HJEMMEL) }
+        verify { oppgaveFacade.updateHjemmel(any(), MANGLER_HJEMMEL) }
     }
 
     @Test
     fun `store MANGLER if beskrivelse or metadata does not contain hjemmel and previous hjemmel is empty`() {
-        val oppgaveServiceMock = mockk<OppgaveService>(relaxed = true)
+        val oppgaveFacade = mockk<OppgaveFacade>(relaxed = true)
 
         val hjemmelParsingServiceMock = mockk<HjemmelParsingService>()
         every { hjemmelParsingServiceMock.extractHjemmel(any()) } returns emptyList()
@@ -133,11 +140,12 @@ internal class KafkaOppgaveConsumerTest {
         val oppgaveRecordMock = mockk<ConsumerRecord<String, String>>()
         every { oppgaveRecordMock.value() } returns getJsonWithoutHjemmel()
 
-        val kafkaOppgaveConsumer = KafkaOppgaveConsumer(mockk(), hjemmelParsingServiceMock, oppgaveServiceMock)
+        val kafkaOppgaveConsumer =
+            KafkaOppgaveConsumer(mockk(), hjemmelParsingServiceMock, oppgaveFacade)
 
         kafkaOppgaveConsumer.listen(oppgaveRecordMock)
 
-        verify { oppgaveServiceMock.updateHjemmel(any(), MANGLER_HJEMMEL) }
+        verify { oppgaveFacade.updateHjemmel(any(), MANGLER_HJEMMEL) }
     }
 
     @Test

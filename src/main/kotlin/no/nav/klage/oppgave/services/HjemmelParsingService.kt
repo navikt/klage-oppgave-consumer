@@ -1,4 +1,4 @@
-package no.nav.klage.oppgave.service
+package no.nav.klage.oppgave.services
 
 import org.springframework.stereotype.Service
 

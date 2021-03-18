@@ -1,8 +1,10 @@
 package no.nav.klage.oppgave.domain
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import java.time.LocalDate
+import java.time.LocalDateTime
 
-data class Oppgave(
+data class OppgaveApiRecord(
     val id: Long,
     val versjon: Int,
     val journalpostId: String? = null,
@@ -24,9 +26,12 @@ data class Oppgave(
     val aktivDato: String? = null,
     val opprettetAv: String? = null,
     val endretAv: String? = null,
-    val opprettetTidspunkt: String? = null,
-    val endretTidspunkt: String? = null,
-    val ferdigstiltTidspunkt: String? = null,
+    @JsonDeserialize(using = OffsetDateTimeToLocalDateTimeDeserializer::class)
+    val opprettetTidspunkt: LocalDateTime,
+    @JsonDeserialize(using = OffsetDateTimeToLocalDateTimeDeserializer::class)
+    val endretTidspunkt: LocalDateTime? = null,
+    @JsonDeserialize(using = OffsetDateTimeToLocalDateTimeDeserializer::class)
+    val ferdigstiltTidspunkt: LocalDateTime? = null,
     val behandlesAvApplikasjon: String? = null,
     val journalpostkilde: String? = null,
     val identer: List<Ident>? = null,
@@ -56,7 +61,7 @@ enum class Status {
 
 data class OppgaveResponse(
     val antallTreffTotalt: Int,
-    val oppgaver: List<Oppgave>
+    val oppgaver: List<OppgaveApiRecord>
 )
 
 enum class Statuskategori {
