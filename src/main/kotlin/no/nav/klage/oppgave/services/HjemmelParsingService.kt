@@ -105,5 +105,17 @@ class HjemmelParsingService {
             .find { it.noekkel == MetadataNoekkel.HJEMMEL && it.verdi.matchesHjemmelRegex() }
             ?.verdi
             ?: hjemmelRegex.findAll(oppgaveKopiVersjon.beskrivelse ?: "").collect().firstOrNull()
+
+
+    private fun Sequence<MatchResult>.collect(): List<String> {
+        val list = mutableListOf<String>()
+        this.iterator().forEachRemaining {
+            val hjemmel = it.value.replace("§", "").trim()
+            list.add(hjemmel)
+        }
+        return list
+    }
+
+    private fun String.matchesHjemmelRegex() = hjemmelRegex.find(this) != null
 */
 }
