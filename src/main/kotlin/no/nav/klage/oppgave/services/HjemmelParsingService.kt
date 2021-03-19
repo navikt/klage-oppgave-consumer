@@ -85,4 +85,25 @@ class HjemmelParsingService {
         "22-15"
     )
 
+    /*
+    fun getHjemmelFromOppgaveKopi(oppgaveKopi: OppgaveKopi): MutableList<Hjemmel> {
+        val metadataHjemmel = oppgaveKopi.metadata.find {
+            it.noekkel == MetadataNoekkel.HJEMMEL && it.verdi.matchesHjemmelRegex()
+        }
+        if (metadataHjemmel != null) {
+            return mutableListOf(generateHjemmelFromText(metadataHjemmel.verdi))
+        }
+        val hjemler = hjemmelRegex.findAll(oppgaveKopi.beskrivelse ?: "").collect()
+        if (hjemler.isNotEmpty()) {
+            return mutableListOf(generateHjemmelFromText(hjemler[0]))
+        }
+        return mutableListOf()
+    }
+
+    fun getHjemmelFromOppgaveKopiVersjon(oppgaveKopiVersjon: OppgaveKopiVersjon): String? =
+        oppgaveKopiVersjon.metadata
+            .find { it.noekkel == MetadataNoekkel.HJEMMEL && it.verdi.matchesHjemmelRegex() }
+            ?.verdi
+            ?: hjemmelRegex.findAll(oppgaveKopiVersjon.beskrivelse ?: "").collect().firstOrNull()
+*/
 }
