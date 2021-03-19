@@ -4,8 +4,9 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.klage.oppgave.domain.OppgaveKafkaRecord
 import no.nav.klage.oppgave.domain.OppgaveKafkaRecord.MetadataKey.HJEMMEL
-import no.nav.klage.oppgave.service.HjemmelParsingService
-import no.nav.klage.oppgave.service.OppgaveService
+import no.nav.klage.oppgave.facades.OppgaveFacade
+import no.nav.klage.oppgave.services.HjemmelParsingService
+import no.nav.klage.oppgave.services.OppgaveApiService
 import no.nav.klage.oppgave.utils.getLogger
 import no.nav.klage.oppgave.utils.getSecureLogger
 import no.nav.slackposter.SlackClient
@@ -17,7 +18,7 @@ import org.springframework.stereotype.Component
 class KafkaOppgaveConsumer(
     private val slackClient: SlackClient,
     private val hjemmelParsingService: HjemmelParsingService,
-    private val oppgaveService: OppgaveService
+    private val oppgaveFacade: OppgaveFacade
 ) {
 
     companion object {
@@ -41,7 +42,7 @@ class KafkaOppgaveConsumer(
                 oppgave.logIt()
 
                 //Store copy
-                oppgaveService.storeLocalCopy(oppgave)
+                oppgaveFacade.saveOppgaveKopi(oppgave)
 
                 logger.debug("Attempting to extract hjemler from beskrivelse")
 
@@ -56,7 +57,7 @@ class KafkaOppgaveConsumer(
 
                         if (shouldStoreHjemmelInOppgave(oppgave.metadata?.get(HJEMMEL), foundHjemler.first())) {
                             logger.debug("Storing new hjemmel in oppgave")
-                            oppgaveService.updateHjemmel(oppgave.id, foundHjemler.first())
+                            oppgaveFacade.updateHjemmel(oppgave.id, foundHjemler.first())
                         } else {
                             logger.debug("No need to store hjemmel")
                         }
@@ -79,7 +80,7 @@ class KafkaOppgaveConsumer(
             logger.debug("HJEMMEL is already set to {}", oppgave.metadata?.get(HJEMMEL))
         } else {
             logger.debug("Setting HJEMMEL to {}", MANGLER_HJEMMEL)
-            oppgaveService.updateHjemmel(oppgave.id, MANGLER_HJEMMEL)
+            oppgaveFacade.updateHjemmel(oppgave.id, MANGLER_HJEMMEL)
         }
     }
 

@@ -1,7 +1,7 @@
 package no.nav.klage.oppgave.clients
 
 import brave.Tracer
-import no.nav.klage.oppgave.domain.Oppgave
+import no.nav.klage.oppgave.domain.OppgaveApiRecord
 import no.nav.klage.oppgave.domain.OppgaveResponse
 import no.nav.klage.oppgave.domain.Statuskategori
 import no.nav.klage.oppgave.exceptions.OppgaveClientException
@@ -75,18 +75,18 @@ class OppgaveClient(
         }
 
     @Retryable
-    fun putOppgave(oppgave: Oppgave) =
+    fun putOppgave(oppgaveApiRecord: OppgaveApiRecord) =
         logTimingAndWebClientResponseException("putOppgave") {
             oppgaveWebClient.put()
                 .uri { uriBuilder ->
-                    uriBuilder.pathSegment("{id}").build(oppgave.id)
+                    uriBuilder.pathSegment("{id}").build(oppgaveApiRecord.id)
                 }
                 .contentType(MediaType.APPLICATION_JSON)
                 .header("X-Correlation-ID", tracer.currentSpan().context().traceIdString())
                 .header("Nav-Consumer-Id", applicationName)
-                .bodyValue(oppgave)
+                .bodyValue(oppgaveApiRecord)
                 .retrieve()
-                .bodyToMono<Oppgave>()
+                .bodyToMono<OppgaveApiRecord>()
                 .block() ?: throw OppgaveClientException("Oppgave could not be put")
         }
 
@@ -100,7 +100,7 @@ class OppgaveClient(
                 .header("X-Correlation-ID", tracer.currentSpan().context().traceIdString())
                 .header("Nav-Consumer-Id", applicationName)
                 .retrieve()
-                .bodyToMono<Oppgave>()
+                .bodyToMono<OppgaveApiRecord>()
                 .block() ?: throw OppgaveClientException("Oppgave could not be fetched")
         }
 

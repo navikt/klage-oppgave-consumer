@@ -3,7 +3,8 @@ package no.nav.klage.oppgave.api
 import no.nav.klage.oppgave.domain.*
 import no.nav.klage.oppgave.domain.ResponseStatus
 import no.nav.klage.oppgave.exceptions.OppgaveClientException
-import no.nav.klage.oppgave.service.OppgaveService
+import no.nav.klage.oppgave.facades.OppgaveFacade
+import no.nav.klage.oppgave.services.OppgaveApiService
 import no.nav.klage.oppgave.utils.getLogger
 import no.nav.security.token.support.core.api.Unprotected
 import org.springframework.web.bind.annotation.*
@@ -14,7 +15,7 @@ import java.time.format.DateTimeFormatter
 @RestController
 @Unprotected
 class BatchUpdateController(
-    private val oppgaveService: OppgaveService
+    private val oppgaveFacade: OppgaveFacade
 ) {
     companion object {
         @Suppress("JAVA_CLASS_ON_COMPANION")
@@ -24,13 +25,13 @@ class BatchUpdateController(
     @PostMapping("/batchupdate")
     fun triggerBatchUpdate(@RequestBody request: BatchUpdateRequest): BatchUpdateResponse {
         logger.info("Triggered batchUpdate with dryRun = {}", request.dryRun)
-        return oppgaveService.bulkUpdateHjemmel(request)
+        return oppgaveFacade.bulkUpdateHjemmel(request)
     }
 
     @PostMapping("/batchstore")
     fun triggerBatchStore(@RequestBody request: BatchStoreRequest): BatchStoreResponse {
         logger.info("Triggered batchstore with dryRun = {}", request.dryRun)
-        return oppgaveService.batchStore(request)
+        return oppgaveFacade.batchStore(request)
     }
 
 }

@@ -1,7 +1,9 @@
 package no.nav.klage.oppgave.domain
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 const val BEHANDLINGSTYPE_KLAGE = "ae0058"
 const val KLAGEENHET_PREFIX = "42"
@@ -29,9 +31,12 @@ data class OppgaveKafkaRecord(
     val aktivDato: LocalDate,
     val opprettetAv: String,
     val endretAv: String? = null,
-    val opprettetTidspunkt: String,
-    val endretTidspunkt: String? = null,
-    val ferdigstiltTidspunkt: String? = null,
+    @JsonDeserialize(using = OffsetDateTimeToLocalDateTimeDeserializer::class)
+    val opprettetTidspunkt: LocalDateTime,
+    @JsonDeserialize(using = OffsetDateTimeToLocalDateTimeDeserializer::class)
+    val endretTidspunkt: LocalDateTime? = null,
+    @JsonDeserialize(using = OffsetDateTimeToLocalDateTimeDeserializer::class)
+    val ferdigstiltTidspunkt: LocalDateTime? = null,
     val behandlesAvApplikasjon: String? = null,
     val journalpostkilde: String? = null,
     val ident: Ident? = null,
